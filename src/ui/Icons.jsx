@@ -1,0 +1,19 @@
+const base = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+
+export const IconSound = () => (<svg {...base}><path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" /></svg>);
+export const IconMute = () => (<svg {...base}><path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l5 6M22 9l-5 6" /></svg>);
+export const IconBulb = () => (<svg {...base}><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z" /></svg>);
+export const IconClose = () => (<svg {...base}><path d="M6 6l12 12M18 6L6 18" /></svg>);
+export const IconChevron = ({ up }) => (<svg {...base} style={{ transform: up ? 'rotate(180deg)' : 'none' }}><path d="M6 9l6 6 6-6" /></svg>);
+export const IconCheck = ({ size = 14 }) => (<svg {...base} width={size} height={size}><path d="M5 12l5 5 9-10" /></svg>);
+export const IconBook = () => (<svg {...base}><path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z" /><path d="M5 17a3 3 0 0 1 3-3h10" /></svg>);
+export const IconHelp = () => (<svg {...base}><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01" /></svg>);
+export const IconDoor = () => (<svg {...base}><path d="M6 21V4h12v17M3 21h18" /><path d="M14 12v.01" /></svg>);
+export const IconCompass = () => (<svg {...base}><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2 5-5 2 2-5 5-2z" /></svg>);
+export const IconMotion = ({ off }) => (<svg {...base}><path d="M4 12h3l3-7 4 14 3-7h3" />{off && <path d="M3 3l18 18" />}</svg>);
+export const IconMouse = () => (<svg {...base}><rect x="7" y="3" width="10" height="17" rx="5" /><path d="M12 7v3" /></svg>);
+export const IconHand = () => (<svg {...base}><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11.5V4.5a1.5 1.5 0 0 1 3 0V12M14 11.5V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.5A5.5 5.5 0 0 1 5 16.2L3.6 13a1.5 1.5 0 0 1 2.7-1.3L8 14" /></svg>);
+export const IconSearch = () => (<svg {...base}><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5" /></svg>);
+export const IconKeyboard = () => (<svg {...base}><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" /></svg>);
+export const IconClock = () => (<svg {...base}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>);
+export const IconFile = () => (<svg {...base}><path d="M7 3h7l5 5v13H7z" /><path d="M14 3v5h5" /></svg>);
