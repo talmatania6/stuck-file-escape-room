@@ -24,8 +24,8 @@ export const useSettings = create(
 
 /** What each graphics level turns on. */
 export const QUALITY = {
-  high: { dpr: [1, 1.5], bloom: true, dust: true, label: 'גבוהה' },
-  medium: { dpr: [1, 1.25], bloom: true, dust: true, label: 'רגילה' },
+  high: { dpr: [1, 1.5], bloom: true, dust: true, ao: true, shadows: 2048, label: 'גבוהה' },
+  medium: { dpr: [1, 1.25], bloom: true, dust: true, shadows: 1024, label: 'רגילה' },
   low: { dpr: [1, 1], bloom: false, dust: false, label: 'חסכונית' },
 };
 

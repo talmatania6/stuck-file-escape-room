@@ -8,6 +8,7 @@ import { LookControls, fpsEvents } from '../engine/LookControls';
 import { useSettings, QUALITY } from '../game/settings';
 import { ViewHint, SettingsButton } from '../ui/Settings';
 import { PostFX } from '../engine/PostFX';
+import { SceneEnvironment } from '../engine/Environment';
 import { HubScene, HUB_STANDPOINTS } from '../hub/HubScene';
 import { HUD } from '../ui/HUD';
 import { HelpPanel, Journal, SuccessCard } from '../ui/Panels';
@@ -146,6 +147,7 @@ export function RoomScreen() {
         <Suspense fallback={null}>
           <Scene />
         </Suspense>
+        <SceneEnvironment file={mod.env?.file || 'lab.exr'} intensity={mod.env?.intensity ?? 0.22} />
         <LookControls standpoints={mod.standpoints} bounds={mod.bounds} />
         <PostFX />
       </Canvas>

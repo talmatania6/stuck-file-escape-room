@@ -209,7 +209,7 @@ export function Scene() {
         <Box p={[-0.45, 0.6, 0]} s={[0.04, 0.6, 0.6]} c="#59636d" m={0.7} r={0.4} />
       </group>
       <ExitDoor d={D} open={solved} onActivate={() => (solved ? leaveRoom(2) : useUI.getState().say('companion', 'הדלת תיפתח כשכל החבילות יגיעו ליעד.'))} />
-      <Companion position={[-1.7, 0, -0.7]} facing={0.5} onActivate={replay} />
+      <Companion position={[-2.4, 0, -0.9]} facing={0.5} onActivate={replay} />
     </>
   );
 }

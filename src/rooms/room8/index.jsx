@@ -84,7 +84,7 @@ export function Scene() {
           </group>
         </group>
       </Interactable>
-      <Companion position={[-1.5, 0, -0.6]} facing={0.4} onActivate={replay} />
+      <Companion position={[-2.4, 0, -0.8]} facing={0.4} onActivate={replay} />
     </>
   );
 }

@@ -95,7 +95,7 @@ export function Scene() {
         </Interactable>
       </group>
       <ExitDoor d={D} open={solved} accent="#d9b25f" onActivate={() => (solved ? leaveRoom(7) : say('companion', 'אף אחד לא יוצא בלי חותמת.'))} />
-      <Companion position={[1.5, 0, -1.0]} facing={-0.4} onActivate={replay} />
+      <Companion position={[2.4, 0, -0.8]} facing={-0.4} onActivate={replay} />
     </>
   );
 }

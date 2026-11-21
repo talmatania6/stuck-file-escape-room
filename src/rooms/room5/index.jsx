@@ -94,7 +94,7 @@ export function Scene() {
       <color attach="background" args={['#0f0b0a']} />
       <fog attach="fog" args={['#0f0b0a', 8, 18]} />
       <RoomLights fill="#f0dcc6" ground="#2a1c18" amount={0.55} solved={solved} />
-      <RoomShell w={7} d={D} h={3.5} wall="#5a4a44" floor="#2c2422" ceil="#231c1a" pilaster="#8a6a52" cove="#ffd9ae" coveIntensity={0.95} panelCols={2} panelRows={2} seed={51} />
+      <RoomShell w={7} d={D} h={3.5} wall="#5a4a44" floor="#2c2422" ceil="#231c1a" pilaster="#8a6a52" cove="#ffd9ae" coveIntensity={0.95} panelCols={2} panelRows={2} seed={51} keyLight={{ position: [1.2, 2.74, -1.2], target: [0.5, 0, -2.0], fixture: false, color: '#ffc98a', intensity: 9, angle: 1.15 }} />
       {/* warm pendant lamps */}
       {[-1.2, 1.2].map((x) => (
         <group key={x} position={[x, 0, -1.2]}>
@@ -134,7 +134,7 @@ export function Scene() {
         <Box p={[0, 1.55, 0.1]} s={[0.35, 0.5, 0.1]} c="#5a3a4a" r={0.95} />
       </group>
       <ExitDoor d={D} open={solved} accent="#c08a62" onActivate={() => (solved ? leaveRoom(5) : say('companion', 'הקו עדיין מנותק. קודם משחזרים את הסשן.'))} />
-      <Companion position={[-1.6, 0, -0.5]} facing={0.4} onActivate={replay} />
+      <Companion position={[-2.3, 0, -0.6]} facing={0.4} onActivate={replay} />
     </>
   );
 }

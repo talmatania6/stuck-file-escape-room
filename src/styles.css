@@ -632,3 +632,36 @@ kbd { display: inline-flex; align-items: center; justify-content: center; min-wi
 .lock-hint { position: fixed; top: 92px; left: 50%; transform: translateX(-50%); z-index: 9; padding: 10px 16px; border-radius: 999px; background: rgba(10, 16, 23, 0.85); border: 1px solid rgba(67, 217, 232, 0.35); color: var(--text-primary); font-size: 14.5px; pointer-events: none; animation: briefIn 400ms var(--ease-out-cubic) both; white-space: nowrap; }
 /* terminal corner bracket sits at the bottom so it never crowds the close button */
 .device::after { top: auto; bottom: 10px; border-top: 0; border-bottom: 2px solid var(--tone); border-start-end-radius: 0; border-end-end-radius: 6px; }
+
+
+/* ================= 2026 polish layer ================= */
+/* lines arrive word by word – reads like speech, not a pasted block */
+.bubble-body p.words span { display: inline; opacity: 0; filter: blur(3px); animation: wordIn .42s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes wordIn { to { opacity: 1; filter: none; } }
+
+/* glass surfaces: a lit top edge and a soft inner sheen, like real frosted panels */
+.bubble, .side-panel, .coach, .bubble-mini, .lock-hint, .hud, .settings-panel {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 0 1px rgba(255, 255, 255, 0.015), 0 18px 46px rgba(0, 0, 0, 0.45);
+}
+.bubble { background: linear-gradient(180deg, rgba(30, 33, 40, 0.94), rgba(19, 21, 26, 0.95)); }
+.bubble-face img { box-shadow: 0 0 0 4px rgba(239, 138, 128, 0.08), 0 0 22px rgba(239, 138, 128, 0.25); }
+
+/* primary buttons: a light sweep on hover and a little lift */
+.btn { position: relative; overflow: hidden; transition: filter .15s, transform .15s cubic-bezier(.2, .8, .2, 1), box-shadow .2s; }
+.btn:not(.ghost):not(:disabled) { box-shadow: 0 6px 18px rgba(63, 208, 224, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.btn:not(.ghost):not(:disabled)::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.35) 50%, transparent 65%); transform: translateX(-120%); transition: transform .6s cubic-bezier(.2, .8, .2, 1); pointer-events: none; }
+.btn:not(:disabled):hover { transform: translateY(-1px); }
+.btn:not(.ghost):not(:disabled):hover::after { transform: translateX(120%); }
+.btn:not(:disabled):active { transform: translateY(1px); transition-duration: .05s; }
+.icon-btn { transition: background .15s, border-color .15s, transform .15s cubic-bezier(.2, .8, .2, 1); }
+.icon-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.22); transform: translateY(-1px); }
+.icon-btn:active { transform: translateY(1px); }
+:focus-visible { outline: 2px solid var(--accent-cyan, #43d9e8); outline-offset: 2px; }
+
+/* crosshair: snaps open with a soft halo when it's over something usable */
+.crosshair.on { transform: scale(1.15); box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.55), 0 0 14px rgba(67, 217, 232, 0.8); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble-body p.words span { animation: none; opacity: 1; filter: none; }
+  .btn::after { display: none; }
+}

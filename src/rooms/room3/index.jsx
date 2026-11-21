@@ -164,7 +164,7 @@ export function Scene() {
         <Cyl key={i} p={[x, 3.3, 0]} a={[0.02, 0.02, 7, 6]} rot={[Math.PI / 2, 0, 0]} c={['#2f5d4a', '#2b2b2b', '#5d4a2f'][i]} r={0.6} />
       ))}
       <ExitDoor d={D} open={solved} accent="#5fae8e" onActivate={() => (solved ? leaveRoom(3) : say('companion', 'הדלת תיפתח כשהמנה תצא לדרך.'))} />
-      <Companion position={[1.6, 0, -0.8]} facing={-0.5} onActivate={replay} />
+      <Companion position={[2.4, 0, -0.9]} facing={-0.5} onActivate={replay} />
     </>
   );
 }

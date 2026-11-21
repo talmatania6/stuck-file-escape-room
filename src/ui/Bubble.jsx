@@ -104,7 +104,15 @@ export function Bubble() {
       )}
       <div className="bubble-body">
         <b>{NAMES[line.who] || COMPANION_NAME}</b>
-        <p>{line.text}</p>
+        <p key={`${bubble.key}-${bubble.i}`} className={calm ? '' : 'words'}>
+          {calm
+            ? line.text
+            : line.text.split(' ').map((w, i) => (
+                <span key={i} style={{ animationDelay: `${Math.min(i * 38, 1400)}ms` }}>
+                  {w}{' '}
+                </span>
+              ))}
+        </p>
         {more && (
           <div className="bubble-progress" aria-hidden="true">
             <span style={{ animationDuration: `${readTime(line.text)}ms` }} />

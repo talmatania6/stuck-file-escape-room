@@ -113,7 +113,7 @@ export function Scene() {
         <Cyl p={[0, 0, 0.03]} a={[0.26, 0.26, 0.03, 40]} rot={[Math.PI / 2, 0, 0]} c="#7a6690" m={0.7} r={0.35} />
       </group>
       <ExitDoor d={D} open={solved} accent="#a882c9" onActivate={() => (solved ? leaveRoom(6) : say('companion', 'קודם מפענחים, אחר כך יוצאים.'))} />
-      <Companion position={[-1.4, 0, -1.4]} facing={0.4} onActivate={replay} />
+      <Companion position={[-2.5, 0, -2.3]} facing={0.4} onActivate={replay} />
     </>
   );
 }

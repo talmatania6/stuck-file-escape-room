@@ -6,6 +6,22 @@ import { drag } from './LookControls';
 const HIGHLIGHT = '#3FD0E0';
 const REACH = 4.2; // metres – how close you must be to use an object in FPS mode
 
+/** What the post-processing outline should trace right now (the hovered object's visible meshes). */
+export const hoverOutline = { objects: [] };
+
+function isInside(o, root) {
+  for (let p = o; p; p = p.parent) if (p === root) return true;
+  return false;
+}
+
+function outlineMeshes(root) {
+  const out = [];
+  root.traverse((o) => {
+    if (o.isMesh && !o.userData.noHighlight && o.visible && o.material && o.material.colorWrite !== false && !o.material.transparent) out.push(o);
+  });
+  return out;
+}
+
 /**
  * Wraps any 3D object so it can be explored: a soft turquoise glow on hover,
  * a pointer cursor, a short label, and on click it walks the camera to its
@@ -27,13 +43,16 @@ export function Interactable({ label, onActivate, standpoint, enabled = true, ch
       if (!o.userData._base) o.userData._base = { c: m.emissive.clone(), i: m.emissiveIntensity };
       if (hover && enabled) {
         m.emissive.set(HIGHLIGHT);
-        m.emissiveIntensity = 0.09;
+        m.emissiveIntensity = 0.05;
       } else {
         m.emissive.copy(o.userData._base.c);
         m.emissiveIntensity = o.userData._base.i;
       }
     });
+    hoverOutline.objects = hover && enabled ? outlineMeshes(ref.current) : hoverOutline.objects.filter((o) => !isInside(o, ref.current));
   }, [hover, enabled]);
+
+  useEffect(() => () => { if (ref.current) hoverOutline.objects = hoverOutline.objects.filter((o) => !isInside(o, ref.current)); }, []);
 
   useEffect(() => () => setHovered(null), [setHovered]);
 

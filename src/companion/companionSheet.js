@@ -48,16 +48,7 @@ export function loadCompanionSheet() {
 }
 
 let portrait = null;
-/** Head-and-shoulders crop of the FRONT view, for speech bubbles (or null). */
+/** Ping's face for the speech bubble / HUD: head-and-shoulders from the cleaned front view. */
 export async function companionPortrait() {
-  if (portrait) return portrait;
-  const sheet = await loadCompanionSheet();
-  if (!sheet) return null;
-  const src = sheet.slices[ANGLE.FRONT].image;
-  const c = document.createElement('canvas');
-  c.width = c.height = 160;
-  const size = src.width * 0.5;
-  c.getContext('2d').drawImage(src, src.width * 0.25, src.height * 0.005, size, size, 0, 0, 160, 160);
-  portrait = c.toDataURL('image/png');
-  return portrait;
+  return `${import.meta.env.BASE_URL}assets/ping/ping-portrait.webp`;
 }

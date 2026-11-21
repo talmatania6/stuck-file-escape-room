@@ -8,3 +8,11 @@ normals/brushed.webp, diamond-plate.webp, grooves.webp, fine.webp, brushed-fine.
 
 normals/scratched.webp
   "Scratched Gold 01" normal map, cgbookcase.com (CC0), via the three.js examples.
+
+pbr/concrete.webp, floor-wear.webp, painted.webp, grunge-rough.webp
+  Procedural tileable surface maps generated for this project (no third-party source).
+
+ping/*.webp (Ping, the companion)
+  The team's own character sheet (public/companion/sheet.jpg), cut out per view,
+  upscaled 2x with EDSR (OpenCV dnn_superres, model from github.com/Saafke/EDSR_Tensorflow)
+  and colour-cleaned for this project.

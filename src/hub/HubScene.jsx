@@ -7,6 +7,7 @@ import { Interactable } from '../engine/Interactable';
 import { Box, Cyl, Pl } from '../engine/kit';
 import { panels, metal, tiles } from '../engine/textures';
 import { Companion } from '../companion/Companion';
+import { KeyLight } from '../engine/KeyLight';
 import { Dust } from '../engine/Atmosphere';
 import { SceneEnvironment } from '../engine/Environment';
 import { normalTex } from '../engine/pbr';
@@ -364,6 +365,7 @@ function Hall({ solvedCount, solved }) {
       <ambientLight intensity={glow} color="#cdd8e2" />
       <hemisphereLight args={['#dfe7ee', '#2a2622', 0.35 + solvedCount * 0.06]} />
       <pointLight position={[0, H - 0.6, 0]} intensity={8 + solvedCount * 2} distance={14} decay={1.4} color="#fff1dc" />
+      <KeyLight position={[0, H - 0.25, 0.4]} target={[0, 0, -1.2]} ceiling={H} color="#fff0de" intensity={34} angle={1.25} shaft={false} />
     </group>
   );
 }

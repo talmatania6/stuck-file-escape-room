@@ -3,11 +3,16 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { panels, tiles, metal, sign, hazard } from './textures';
 import { Interactable } from './Interactable';
+import { normalTex, grunge } from './pbr';
 import { Dust } from './Atmosphere';
+import { KeyLight } from './KeyLight';
 
-export function Mat({ c = '#808890', m = 0.4, r = 0.55, map = null, e, ei = 1, side, transparent, opacity, matRef, nmap, ns = 0.6 }) {
+export function Mat({ c = '#808890', m = 0.4, r = 0.55, map = null, e, ei = 1, side, transparent, opacity, matRef, nmap, ns = 0.6, rmap, smooth }) {
+  // every surface gets subtle roughness variation (stains, wear) unless it's a screen/emissive or asked to stay smooth
+  const rough = rmap !== undefined ? rmap : e || smooth || transparent ? null : grunge();
   return (
     <meshStandardMaterial
       ref={matRef}
@@ -16,6 +21,7 @@ export function Mat({ c = '#808890', m = 0.4, r = 0.55, map = null, e, ei = 1, s
       roughness={r}
       map={map}
       normalMap={nmap || null}
+      roughnessMap={rough}
       normalScale={[ns, ns]}
       emissive={e || '#000000'}
       emissiveIntensity={e ? ei : 0}
@@ -27,10 +33,28 @@ export function Mat({ c = '#808890', m = 0.4, r = 0.55, map = null, e, ei = 1, s
   );
 }
 
-export function Box({ p = [0, 0, 0], s = [1, 1, 1], rot, meshRef, noHighlight, ...mat }) {
+/**
+ * Shared rounded-edge box geometry: a small bevel on every edge catches the light,
+ * which is most of the difference between "CG primitive" and "manufactured object".
+ * Cached per size; tiny/thin boxes stay sharp (no visible gain, extra vertices).
+ */
+const boxCache = new Map();
+function bevelledBox(s) {
+  const key = s.join('|');
+  let g = boxCache.get(key);
+  if (!g) {
+    const min = Math.min(s[0], s[1], s[2]);
+    g = min < 0.05 ? new THREE.BoxGeometry(...s) : new RoundedBoxGeometry(s[0], s[1], s[2], 2, Math.min(0.025, min * 0.12));
+    boxCache.set(key, g);
+  }
+  return g;
+}
+
+export function Box({ p = [0, 0, 0], s = [1, 1, 1], rot, meshRef, noHighlight, sharp, ...mat }) {
+  const geo = useMemo(() => (sharp ? null : bevelledBox(s)), [sharp, s[0], s[1], s[2]]);
   return (
-    <mesh ref={meshRef} position={p} rotation={rot} userData={noHighlight ? { noHighlight: true } : undefined}>
-      <boxGeometry args={s} />
+    <mesh ref={meshRef} position={p} rotation={rot} geometry={geo || undefined} userData={noHighlight ? { noHighlight: true } : undefined}>
+      {!geo && <boxGeometry args={s} />}
       <Mat {...mat} />
     </mesh>
   );
@@ -81,6 +105,8 @@ export function RoomShell({
   panelRows = 3,
   floorTiles = 6,
   seed = 1,
+  keyLight = {},
+  greebles = true,
 }) {
   const t = useMemo(
     () => ({
@@ -91,6 +117,11 @@ export function RoomShell({
       floor: tiles(floor, seed + 4, { n: 4, repeat: [w / floorTiles * 1.5, d / floorTiles * 1.5] }),
       ceil: panels(ceil, seed + 5, { cols: 3, rows: 3, repeat: [w / 3, d / 3], grime: 0.2 }),
       trim: metal(trim, seed + 6, [4, 1]),
+      wallN: normalTex('painted', [w / 2, h / 2]),
+      wallR: grunge([w / 3, h / 3]),
+      floorN: normalTex('floor-wear', [w / 3, d / 3]),
+      floorR: grunge([w / 2.5, d / 2.5]),
+      ceilN: normalTex('concrete', [w / 3, d / 3]),
     }),
     [wall, floor, ceil, trim, w, d, h, seed, panelCols, panelRows, floorTiles],
   );
@@ -103,7 +134,8 @@ export function RoomShell({
     </group>
   );
   const pilasters = [];
-  for (let x = -W + 1.6; x < W - 0.8; x += 2.2) pilasters.push(pil(x, -D + 0.08, 0));
+  // the centre of the back wall is where each room hangs its main board – keep it clear
+  for (let x = -W + 1.6; x < W - 0.8; x += 2.2) if (Math.abs(x) > 1.0) pilasters.push(pil(x, -D + 0.08, 0));
   for (let z = -D + 1.6; z < D - 0.8; z += 2.2) {
     pilasters.push(pil(-W + 0.08, z, Math.PI / 2));
     pilasters.push(pil(W - 0.08, z, -Math.PI / 2));
@@ -116,15 +148,15 @@ export function RoomShell({
   );
   return (
     <group>
-      <Pl p={[0, h / 2, -D]} s={[w, h]} map={t.wallNS} r={0.75} m={0.3} />
-      <Pl p={[-W, h / 2, 0]} s={[d, h]} rot={[0, Math.PI / 2, 0]} map={t.wallEW} r={0.75} m={0.3} />
-      <Pl p={[W, h / 2, 0]} s={[d, h]} rot={[0, -Math.PI / 2, 0]} map={t.wallEW} r={0.75} m={0.3} />
+      <Pl p={[0, h / 2, -D]} s={[w, h]} map={t.wallNS} r={0.75} m={0.3} nmap={t.wallN} ns={0.45} rmap={t.wallR} />
+      <Pl p={[-W, h / 2, 0]} s={[d, h]} rot={[0, Math.PI / 2, 0]} map={t.wallEW} r={0.75} m={0.3} nmap={t.wallN} ns={0.45} rmap={t.wallR} />
+      <Pl p={[W, h / 2, 0]} s={[d, h]} rot={[0, -Math.PI / 2, 0]} map={t.wallEW} r={0.75} m={0.3} nmap={t.wallN} ns={0.45} rmap={t.wallR} />
       {/* south wall around the exit opening (x -0.75…0.75, height 2.4) */}
       <Pl p={[-W + sideW / 2, h / 2, D]} s={[sideW, h]} rot={[0, Math.PI, 0]} map={t.side} r={0.75} m={0.3} />
       <Pl p={[W - sideW / 2, h / 2, D]} s={[sideW, h]} rot={[0, Math.PI, 0]} map={t.side} r={0.75} m={0.3} />
       <Pl p={[0, (h + 2.4) / 2, D]} s={[1.5, h - 2.4]} rot={[0, Math.PI, 0]} map={t.top} r={0.75} m={0.3} />
-      <Pl p={[0, 0, 0]} s={[w, d]} rot={[-Math.PI / 2, 0, 0]} map={t.floor} r={0.38} m={0.25} />
-      <Pl p={[0, h, 0]} s={[w, d]} rot={[Math.PI / 2, 0, 0]} map={t.ceil} r={0.9} />
+      <Pl p={[0, 0, 0]} s={[w, d]} rot={[-Math.PI / 2, 0, 0]} map={t.floor} r={0.42} m={0.25} nmap={t.floorN} ns={0.5} rmap={t.floorR} />
+      <Pl p={[0, h, 0]} s={[w, d]} rot={[Math.PI / 2, 0, 0]} map={t.ceil} r={0.9} nmap={t.ceilN} ns={0.6} />
       {pilasters}
       {/* light cove along the top of each wall */}
       {coveStrip([0, h - 0.22, -D + 0.12], [w, 0.1, 0.22])}
@@ -139,8 +171,12 @@ export function RoomShell({
       <Box p={[0, 0.06, -D + 0.02]} s={[w, 0.12, 0.04]} map={t.trim} m={0.6} r={0.45} />
       <Box p={[-W + 0.02, 0.06, 0]} s={[0.04, 0.12, d]} map={t.trim} m={0.6} r={0.45} />
       <Box p={[W - 0.02, 0.06, 0]} s={[0.04, 0.12, d]} map={t.trim} m={0.6} r={0.45} />
+      {/* services: conduits, brackets and vents – the room was built by someone */}
+      {greebles && <WallServices w={w} d={d} h={h} trim={trim} accent={cove} />}
       {/* drifting dust in the light */}
       <Dust w={w - 0.6} d={d - 0.6} h={h} color={cove} size={2.2} count={Math.round(w * d * 5)} />
+      {/* shadow-casting key light from a ceiling fixture */}
+      {keyLight !== false && <KeyLight ceiling={h} position={[0.4, h - 0.12, 0.6]} color={cove} {...keyLight} />}
     </group>
   );
 }
@@ -231,10 +267,58 @@ export function Leds({ p, rot, rows = 4, cols = 6, gap = 0.05, bad = [], ok = tr
 export function RoomLights({ fill = '#d9e2ea', ground = '#2a2622', amount = 0.6, solved }) {
   return (
     <>
-      <ambientLight intensity={amount * (solved ? 1.2 : 1)} color={fill} />
-      <hemisphereLight args={[fill, ground, amount * 0.9]} />
+      {/* fill stays a little low so the shadowed key light gives objects their shape */}
+      <ambientLight intensity={amount * 0.88 * (solved ? 1.2 : 1)} color={fill} />
+      <hemisphereLight args={[fill, ground, amount * 0.95]} />
     </>
   );
+}
+
+/** Conduit runs with brackets along both side walls, a junction box, and two vent grilles. */
+function WallServices({ w, d, h, trim, accent }) {
+  const W = w / 2, D = d / 2;
+  const y = h - 0.62;
+  const len = d - 0.7;
+  const grille = useMemo(() => {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 64;
+    const g = c.getContext('2d');
+    g.fillStyle = '#1b1e22'; g.fillRect(0, 0, 128, 64);
+    for (let i = 0; i < 9; i++) {
+      const gy = 5 + i * 6.5;
+      g.fillStyle = '#050607'; g.fillRect(6, gy, 116, 3.4);
+      g.fillStyle = 'rgba(255,255,255,0.10)'; g.fillRect(6, gy + 3.4, 116, 1);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }, []);
+  const side = (sx) => {
+    const x = sx * (W - 0.24);
+    const brackets = [];
+    for (let z = -D + 0.6; z < D - 0.4; z += 1.1) {
+      brackets.push(<Box key={z} p={[sx * (W - 0.13), y + 0.04, z]} s={[0.22, 0.2, 0.04]} c={trim} m={0.75} r={0.4} sharp />);
+    }
+    return (
+      <group key={sx}>
+        <Cyl p={[x, y + 0.08, 0]} a={[0.032, 0.032, len, 14]} rot={[Math.PI / 2, 0, 0]} c="#8b949c" m={0.85} r={0.32} />
+        <Cyl p={[x + sx * 0.02, y - 0.02, 0]} a={[0.02, 0.02, len, 10]} rot={[Math.PI / 2, 0, 0]} c="#565d64" m={0.8} r={0.4} />
+        {brackets}
+        {/* junction box with a status LED */}
+        <group position={[sx * (W - 0.18), y - 0.32, -D * 0.3]}>
+          <Box s={[0.14, 0.32, 0.26]} c="#2b3036" m={0.6} r={0.45} />
+          <Box p={[-sx * 0.071, 0.1, 0.07]} s={[0.004, 0.022, 0.022]} c="#000" e={accent} ei={2.2} noHighlight sharp />
+        </group>
+        {/* vent grille */}
+        <mesh position={[sx * (W - 0.04), h - 1.05, -D * 0.7]} rotation={[0, -sx * Math.PI / 2, 0]} userData={{ noHighlight: true }} raycast={() => null}>
+          <planeGeometry args={[0.9, 0.45]} />
+          <meshStandardMaterial map={grille} metalness={0.6} roughness={0.5} />
+        </mesh>
+        <Box p={[sx * (W - 0.02), h - 1.05, -D * 0.7]} s={[0.03, 0.5, 0.95]} c={trim} m={0.7} r={0.4} sharp />
+      </group>
+    );
+  };
+  return <group>{[-1, 1].map(side)}</group>;
 }
 
 /** Animated value 0→1 that follows a boolean, for "the room comes alive" effects. */

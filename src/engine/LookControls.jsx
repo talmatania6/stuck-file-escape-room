@@ -225,9 +225,11 @@ export function LookControls({ standpoints, initial = 'center', bounds = { half:
 
   const fwd = useRef(new THREE.Vector3());
   const side = useRef(new THREE.Vector3());
+  const bob = useRef({ phase: 0, amp: 0, applied: 0 });
   useFrame((_, dt) => {
     const s = state.current;
     const calm = useGame.getState().reduceMotion;
+    let walking = false;
     // ---- keyboard walking ----
     if (held.size && !useUI.getState().overlay) {
       const d = Math.min(dt, 0.05);
@@ -249,6 +251,8 @@ export function LookControls({ standpoints, initial = 'center', bounds = { half:
           t.x = THREE.MathUtils.clamp(t.x, -h, h);
           t.z = THREE.MathUtils.clamp(t.z, -h, h);
         }
+        walking = true;
+        bob.current.phase += d * 8.5 * useSettings.getState().walkSpeed;
         camera.position.x = t.x; // walking is direct, no glide lag
         camera.position.z = t.z;
         if (useUI.getState().standpoint !== 'free') useUI.getState().setStandpoint('free');
@@ -263,8 +267,14 @@ export function LookControls({ standpoints, initial = 'center', bounds = { half:
     }
     s.yaw += (s.tYaw - s.yaw) * k;
     s.pitch += (s.tPitch - s.pitch) * k;
+    const b = bob.current;
+    camera.position.y -= b.applied; // take last frame's step bounce out before easing
     camera.position.lerp(targetPos.current, calm ? 1 : 1 - Math.exp(-dt * 2.4));
-    camera.rotation.set(s.pitch, s.yaw, 0, 'YXZ');
+    // a gentle head bob while walking (a few cm), fading out when you stop
+    b.amp += ((walking && !calm ? 1 : 0) - b.amp) * (1 - Math.exp(-dt * 8));
+    b.applied = Math.abs(Math.sin(b.phase)) * 0.028 * b.amp - 0.014 * b.amp;
+    camera.position.y += b.applied;
+    camera.rotation.set(s.pitch, s.yaw, Math.sin(b.phase) * 0.0035 * b.amp, 'YXZ');
     // the view moves under a still mouse – re-check what the pointer is over
     if (++frame.current % 6 === 0 && (Math.abs(s.tYaw - s.yaw) > 0.002 || camera.position.distanceTo(targetPos.current) > 0.01)) {
       events.update?.();

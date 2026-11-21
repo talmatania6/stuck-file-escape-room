@@ -10,6 +10,8 @@ import { getCtx, playBeeps, sfx } from '../../audio/audio';
 import { CODE } from './data';
 import { Scope } from './Scope';
 import { Dust } from '../../engine/Atmosphere';
+import { KeyLight } from '../../engine/KeyLight';
+import { normalTex, grunge } from '../../engine/pbr';
 
 const R = roomByNumber(1);
 const LINES = R.lines;
@@ -47,7 +49,8 @@ function Shell() {
     }),
     [],
   );
-  const wall = (map) => <meshStandardMaterial map={map} roughness={0.95} />;
+  const relief = useMemo(() => ({ wN: normalTex('concrete', [3, 1.5]), wR: grunge([2, 1]), fN: normalTex('floor-wear', [3, 3]), fR: grunge([2.5, 2.5]), cN: normalTex('concrete', [3, 3]) }), []);
+  const wall = (map) => <meshStandardMaterial map={map} roughness={0.95} normalMap={relief.wN} normalScale={[0.7, 0.7]} roughnessMap={relief.wR} />;
   return (
     <group>
       <mesh position={[0, H / 2, -HALF]}>
@@ -77,11 +80,11 @@ function Shell() {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[9, 9]} />
-        <meshStandardMaterial map={t.floor} roughness={0.82} metalness={0.05} />
+        <meshStandardMaterial map={t.floor} roughness={0.78} metalness={0.08} normalMap={relief.fN} normalScale={[0.6, 0.6]} roughnessMap={relief.fR} />
       </mesh>
       <mesh position={[0, H, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[9, 9]} />
-        <meshStandardMaterial map={t.ceil} roughness={1} />
+        <meshStandardMaterial map={t.ceil} roughness={1} normalMap={relief.cN} normalScale={[0.6, 0.6]} />
       </mesh>
       {/* corner pillars */}
       {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sz], i) => (
@@ -998,6 +1001,7 @@ export function Room1Scene() {
       <Shell />
       <Services />
       <Lamps power={power} />
+      <KeyLight position={[1.8, 3.1, -1.0]} target={[0.6, 0, -2.6]} ceiling={3.6} color="#ffd3a0" intensity={7} angle={1.2} fixture={false} shaft={false} />
       <MainCabinet power={power} solved={solved} />
       <Voltmeter power={power} solved={solved} />
       <Workbench />
