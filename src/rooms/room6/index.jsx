@@ -9,6 +9,8 @@ import { wood, sign } from '../../engine/textures';
 import { Companion } from '../../companion/Companion';
 import { Device, Feedback } from '../../ui/Device';
 import { sfx } from '../../audio/audio';
+import { RoomDressing } from '../../engine/Dressing';
+import { HoloRings } from '../../engine/RoomHeroes';
 
 const R = roomByNumber(6);
 const D = 7;
@@ -36,7 +38,7 @@ function Desk() {
       <Box p={[0, 0.4, -0.55]} s={[0.8, 0.7, 0.55]} c="#2e2433" r={0.7} />
       <Box p={[0, 0.4, 0.75]} s={[0.8, 0.7, 0.05]} c="#2e2433" r={0.7} />
       {/* the drawer that hides the key */}
-      <Interactable label={open ? 'מגירה – לקחת את המפתח' : 'מגירה – לפתוח'} standpoint="desk"
+      <Interactable label={open ? 'מגירה: לקחת את המפתח' : 'מגירה: לפתוח'} standpoint="desk"
         onActivate={() => {
           if (!open) {
             setOpen(true);
@@ -76,6 +78,8 @@ export function Scene() {
       <fog attach="fog" args={['#0c0a10', 8, 18]} />
       <RoomLights fill="#e6dcef" ground="#221a2a" amount={0.55} solved={solved} />
       <RoomShell w={7} d={D} h={3.4} wall="#40364a" floor="#262229" ceil="#1d1922" pilaster="#6d5a80" cove="#f1dcff" panelCols={2} panelRows={4} seed={61} />
+      <RoomDressing accent="#B49AFF" solved={solved} h={3.4} ids={['PR-06', 'PR-07']} />
+      <HoloRings position={[0, 2.55, 0.5]} />
       <LightPanel p={[0, 3.38, -1.6]} s={[2.2, 0.04, 0.3]} color="#fbefff" light={6} />
       <LightPanel p={[0, 3.38, 1.0]} s={[1.2, 0.04, 0.6]} color="#fff3e6" light={6} />
       {/* glass message board */}
@@ -90,7 +94,7 @@ export function Scene() {
       </Interactable>
       <Desk />
       {/* the decoding machine */}
-      <Interactable label="מכונת הפענוח – להקליד" standpoint="machine" onActivate={() => (solved ? say('companion', 'כבר פוענח.') : open('decode'))}>
+      <Interactable label="מכונת הפענוח: להקליד" standpoint="machine" onActivate={() => (solved ? say('companion', 'כבר פוענח.') : open('decode'))}>
         <group position={[2.85, 0, 0.4]}>
           <Box p={[0, 0.72, 0]} s={[0.9, 0.05, 1.4]} map={top} r={0.5} />
           {[-0.6, 0.6].map((z) => <Box key={z} p={[0, 0.36, z]} s={[0.8, 0.72, 0.05]} c="#2e2433" r={0.7} />)}
@@ -132,6 +136,10 @@ function DecodeOverlay() {
     e.preventDefault();
     if (!normalize(value)) {
       setMsg({ kind: 'error', text: 'עוד לא הקלדתם כלום.' });
+      return;
+    }
+    if (!hasKey) {
+      setMsg({ kind: 'error', text: 'קודם צריך למצוא את מפתח הפענוח.' });
       return;
     }
     if (normalize(value) === ANSWER) {

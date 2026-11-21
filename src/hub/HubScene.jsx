@@ -7,6 +7,9 @@ import { Interactable } from '../engine/Interactable';
 import { Box, Cyl, Pl } from '../engine/kit';
 import { panels, metal, tiles } from '../engine/textures';
 import { Companion } from '../companion/Companion';
+import { Dust } from '../engine/Atmosphere';
+import { SceneEnvironment } from '../engine/Environment';
+import { normalTex } from '../engine/pbr';
 import { sfx } from '../audio/audio';
 import { LAYERS, doorTexture, leafTextures, statusBandTexture } from './doorArt';
 
@@ -110,6 +113,51 @@ function DoorProp({ n, accent }) {
   }
 }
 
+/** Soft radial gradient used for fake light pools on the floor. */
+let poolTex = null;
+function lightPoolTexture() {
+  if (poolTex) return poolTex;
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grd.addColorStop(0, 'rgba(255,255,255,0.9)');
+  grd.addColorStop(0.45, 'rgba(255,255,255,0.32)');
+  grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 128, 128);
+  poolTex = new THREE.CanvasTexture(c);
+  return poolTex;
+}
+
+/** The next playable door gets a light pool on the floor and a slow scan line across its face. */
+function ActiveDoorFX() {
+  const pool = useRef();
+  const scan = useRef();
+  const tex = useMemo(lightPoolTexture, []);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (pool.current) pool.current.opacity = 0.55 + Math.sin((t * Math.PI * 2) / 2.8) * 0.07;
+    if (scan.current) {
+      const k = (t % 3.4) / 3.4; // 0..1 top → bottom
+      scan.current.position.y = 3.3 - k * 3.1;
+      scan.current.material.opacity = Math.sin(k * Math.PI) * 0.75;
+    }
+  });
+  return (
+    <group>
+      <mesh position={[0, 0.03, 1.55]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null} userData={{ noHighlight: true }}>
+        <planeGeometry args={[2.6, 2.2]} />
+        <meshBasicMaterial ref={pool} map={tex} color="#3FD0E0" transparent opacity={0.42} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+      </mesh>
+      <mesh ref={scan} position={[0, 3.3, 0.075]} raycast={() => null} userData={{ noHighlight: true }}>
+        <planeGeometry args={[1.86, 0.028]} />
+        <meshBasicMaterial color="#9ff4ff" transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
 function Door({ layer, state, opening, unlocking, onClick }) {
   const tex = useMemo(() => doorTexture(layer, state), [layer, state]);
   const [lTex, rTex] = useMemo(() => leafTextures(tex), [tex]);
@@ -118,6 +166,7 @@ function Door({ layer, state, opening, unlocking, onClick }) {
   const strips = useRef([]);
   const flash = useRef(0);
   const metalTex = useMemo(() => metal('#2b3036', 90 + layer.n, [1, 2]), [layer.n]);
+  const scratch = useMemo(() => normalTex('scratched', [1, 3]), []);
   const stateColor = state === 'done' ? '#65CDAA' : state === 'active' ? '#3FD0E0' : '#FFB547';
   useEffect(() => {
     if (unlocking) flash.current = 1;
@@ -128,7 +177,8 @@ function Door({ layer, state, opening, unlocking, onClick }) {
     if (left.current) left.current.position.x += (-0.475 - o * 0.95 - left.current.position.x) * k;
     if (right.current) right.current.position.x += (0.475 + o * 0.95 - right.current.position.x) * k;
     flash.current = Math.max(0, flash.current - dt * 0.5);
-    const pulse = state === 'active' ? 0.9 + Math.sin(clock.elapsedTime * 2.4) * 0.35 : state === 'done' ? 0.9 : 0.25;
+    // locked: dim and still · active: the focal point, a slow 2.8s breath (±8%) · done: stable
+    const pulse = state === 'active' ? 2.0 * (1 + Math.sin((clock.elapsedTime * Math.PI * 2) / 2.8) * 0.08) : state === 'done' ? 1.15 : 0.22;
     strips.current.forEach((m) => {
       if (m) m.emissiveIntensity = pulse + flash.current * 3;
     });
@@ -136,13 +186,13 @@ function Door({ layer, state, opening, unlocking, onClick }) {
   const a = doorAngle(layer.n);
   return (
     <group position={[Math.sin(a) * DOOR_R, 0, -Math.cos(a) * DOOR_R]} rotation={[0, -a, 0]}>
-      <Interactable label={state === 'active' ? `LAYER ${String(layer.n).padStart(2, '0')} – ${layer.en} · כניסה` : `LAYER ${String(layer.n).padStart(2, '0')} – ${layer.en}`} onActivate={onClick}>
+      <Interactable label={state === 'active' ? `LAYER ${String(layer.n).padStart(2, '0')} · ${layer.en} · כניסה` : `LAYER ${String(layer.n).padStart(2, '0')} · ${layer.en}`} onActivate={onClick}>
         {/* deep portal */}
-        <Box p={[-1.15, 1.75, 0.1]} s={[0.36, 3.5, 0.7]} map={metalTex} c="#9aa3ab" m={0.75} r={0.35} />
-        <Box p={[1.15, 1.75, 0.1]} s={[0.36, 3.5, 0.7]} map={metalTex} c="#9aa3ab" m={0.75} r={0.35} />
-        <Box p={[0, 3.62, 0.1]} s={[2.66, 0.36, 0.7]} map={metalTex} c="#9aa3ab" m={0.75} r={0.35} />
+        <Box p={[-1.15, 1.75, 0.1]} s={[0.36, 3.5, 0.7]} map={metalTex} c="#9aa3ab" m={0.8} r={0.32} nmap={scratch} ns={0.5} />
+        <Box p={[1.15, 1.75, 0.1]} s={[0.36, 3.5, 0.7]} map={metalTex} c="#9aa3ab" m={0.8} r={0.32} nmap={scratch} ns={0.5} />
+        <Box p={[0, 3.62, 0.1]} s={[2.66, 0.36, 0.7]} map={metalTex} c="#9aa3ab" m={0.8} r={0.32} nmap={scratch} ns={0.5} />
         <Box p={[0, 0.02, 0.1]} s={[2.3, 0.04, 0.7]} c="#1c1f23" m={0.7} r={0.3} />
-        {/* accent chamfers – the only lit lines, and they speak: amber locked, turquoise open, green fixed */}
+        {/* accent chamfers, the only lit lines, and they speak: amber locked, turquoise open, green fixed */}
         {[-0.965, 0.965].map((x, i) => (
           <mesh key={x} position={[x, 1.75, 0.46]} userData={{ noHighlight: true }}>
             <boxGeometry args={[0.025, 3.3, 0.02]} />
@@ -181,7 +231,8 @@ function Door({ layer, state, opening, unlocking, onClick }) {
         <Box p={[0, 3.915, 0.35]} s={[0.56, 0.01, 0.1]} c="#000" e={state === 'locked' ? '#6b5a3e' : '#fff0d8'} ei={state === 'locked' ? 0.4 : 1.6} noHighlight />
       </Interactable>
       <DoorProp n={layer.n} accent={layer.accent} />
-      <pointLight position={[0, 3.4, 1.3]} intensity={state === 'locked' ? 2.5 : 7} distance={4.5} decay={1.6} color={state === 'locked' ? '#d6c7ad' : '#fff1de'} />
+      <pointLight position={[0, 3.4, 1.3]} intensity={state === 'locked' ? 2.0 : state === 'active' ? 6.5 : 4.5} distance={4.5} decay={1.6} color={state === 'locked' ? '#d6c7ad' : '#fff1de'} />
+      {state === 'active' && !opening && <ActiveDoorFX />}
     </group>
   );
 }
@@ -204,11 +255,12 @@ function FloorPaths({ solved }) {
     });
   });
   const start = 2.15, end = DOOR_R - 0.55, len = end - start;
+  const plate = useMemo(() => normalTex('diamond-plate', [1.4, len * 1.4]), [len]);
   return (
     <group>
       {LAYERS.map((l, i) => (
         <group key={l.n} rotation={[0, -doorAngle(l.n), 0]}>
-          <Box p={[0, 0.012, -(start + len / 2)]} s={[1.0, 0.024, len]} c="#3a3f45" m={0.55} r={0.35} noHighlight />
+          <Box p={[0, 0.012, -(start + len / 2)]} s={[1.0, 0.024, len]} c="#3a4047" m={0.85} r={0.36} nmap={plate} ns={0.8} noHighlight />
           <Box p={[-0.52, 0.016, -(start + len / 2)]} s={[0.04, 0.03, len]} c="#9aa3ab" m={0.85} r={0.25} noHighlight />
           <Box p={[0.52, 0.016, -(start + len / 2)]} s={[0.04, 0.03, len]} c="#9aa3ab" m={0.85} r={0.25} noHighlight />
           <mesh position={[0, 0.026, -(start + len / 2)]} userData={{ noHighlight: true }}>
@@ -248,6 +300,10 @@ function Hall({ solvedCount, solved }) {
       })(),
       ceil: panels('#22262b', 33, { cols: 2, rows: 2, repeat: [8, 8], grime: 0.1 }),
       column: metal('#8f99a3', 34, [1, 4]),
+      wallN: normalTex('brushed-fine', [28, 2.5]),
+      floorN: normalTex('fine', [16, 16]),
+      ceilN: normalTex('tiles', [10, 10]),
+      columnN: normalTex('grooves', [1, 3]),
     }),
     [],
   );
@@ -256,15 +312,15 @@ function Hall({ solvedCount, solved }) {
     <group>
       <mesh position={[0, H / 2, 0]}>
         <cylinderGeometry args={[HALL_R, HALL_R, H, 70, 1, true]} />
-        <meshStandardMaterial map={t.wall} side={THREE.BackSide} metalness={0.4} roughness={0.6} />
+        <meshStandardMaterial map={t.wall} side={THREE.BackSide} metalness={0.55} roughness={0.5} normalMap={t.wallN} normalScale={[0.55, 0.55]} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[HALL_R, 70]} />
-        <meshStandardMaterial map={t.floor} metalness={0.35} roughness={0.32} />
+        <meshStandardMaterial map={t.floor} metalness={0.4} roughness={0.24} normalMap={t.floorN} normalScale={[0.22, 0.22]} />
       </mesh>
       <mesh position={[0, H, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <circleGeometry args={[HALL_R, 70]} />
-        <meshStandardMaterial map={t.ceil} roughness={0.9} />
+        <meshStandardMaterial map={t.ceil} roughness={0.75} metalness={0.3} normalMap={t.ceilN} normalScale={[0.5, 0.5]} />
       </mesh>
       {/* ceiling: seven ribs (one above each column) meeting a round skylight over the core */}
       {Array.from({ length: 7 }, (_, i) => {
@@ -296,7 +352,7 @@ function Hall({ solvedCount, solved }) {
         const lit = i < solvedCount;
         return (
           <group key={i} position={[Math.sin(a) * (HALL_R - 0.25), 0, -Math.cos(a) * (HALL_R - 0.25)]} rotation={[0, -a, 0]}>
-            <Box p={[0, H / 2, 0]} s={[0.5, H, 0.4]} map={t.column} c="#b9c1c8" m={0.85} r={0.3} />
+            <Box p={[0, H / 2, 0]} s={[0.5, H, 0.4]} map={t.column} c="#b9c1c8" m={0.9} r={0.28} nmap={t.columnN} ns={0.7} />
             <Box p={[0, H / 2, 0.205]} s={[0.07, H - 1.2, 0.01]} c="#000" e="#ffe3bd" ei={0.35 + (lit ? 1.1 : 0)} noHighlight />
             <Box p={[0, 2.4, 0.33]} s={[0.9, 0.55, 0.06]} c="#1a1e22" m={0.5} r={0.4} />
             <Box p={[0, 2.4, 0.365]} s={[0.82, 0.47, 0.01]} c="#000" e={lit ? '#65CDAA' : '#3a4048'} ei={lit ? 0.35 : 0.15} noHighlight />
@@ -338,7 +394,7 @@ function Core({ solved, onActivate, celebrate }) {
   });
   return (
     <group>
-      <Interactable label={ready ? 'עמדת השליחה – לשלוח את הקובץ' : 'ליבת המערכת – מצב הקובץ'} onActivate={onActivate}>
+      <Interactable label={ready ? 'עמדת השליחה: לשלוח את הקובץ' : 'ליבת המערכת: מצב הקובץ'} onActivate={onActivate}>
         {/* floor platform */}
         <Cyl p={[0, 0.04, 0]} a={[1.9, 2.0, 0.08, 64]} c="#2c3136" m={0.7} r={0.35} />
         <mesh position={[0, 0.085, 0]} rotation={[-Math.PI / 2, 0, 0]} userData={{ noHighlight: true }}>
@@ -478,7 +534,9 @@ export function HubScene({ celebrate = false }) {
     <>
       <color attach="background" args={['#0b0f14']} />
       <fog attach="fog" args={['#0b0f14', 9, 22]} />
+      <SceneEnvironment file="warehouse.exr" intensity={0.3} />
       <Hall solvedCount={done7.length} solved={solved} />
+      <Dust radius={HALL_R - 0.8} minRadius={2.2} h={H} count={380} color="#bfefff" size={2.2} opacity={0.5} />
       <Core solved={solved} onActivate={clickCore} celebrate={celebrate} />
       {LAYERS.map((l) => (
         <Door

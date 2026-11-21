@@ -9,6 +9,8 @@ import { wood, sign } from '../../engine/textures';
 import { Companion } from '../../companion/Companion';
 import { Device, MatchBoard, Feedback } from '../../ui/Device';
 import { sfx } from '../../audio/audio';
+import { RoomDressing } from '../../engine/Dressing';
+import { ScannerGantry } from '../../engine/RoomHeroes';
 
 const R = roomByNumber(2);
 const D = 7;
@@ -60,7 +62,7 @@ function Devices({ solved }) {
       <Box p={[3.05, 0.78, 0]} s={[0.75, 0.05, 3.9]} map={top} r={0.6} />
       {[-1.8, 1.8].map((z) => <Box key={z} p={[3.05, 0.38, z]} s={[0.65, 0.76, 0.05]} c="#2f353b" m={0.6} r={0.4} />)}
       {/* laptop */}
-      <Interactable label="המחשב הנייד של נועה – לבדוק" standpoint="devices" onActivate={() => inspectDevice('r2-laptop')}>
+      <Interactable label="המחשב הנייד של נועה: לבדוק" standpoint="devices" onActivate={() => inspectDevice('r2-laptop')}>
         <group position={[3.0, 0.81, DEVICES[0].z]}>
           <Box p={[0, 0.012, 0]} s={[0.34, 0.022, 0.48]} c="#b9c0c7" m={0.8} r={0.3} />
           <group position={[0.17, 0.02, 0]} rotation={[0, 0, -0.22]}>
@@ -72,7 +74,7 @@ function Devices({ solved }) {
         </group>
       </Interactable>
       {/* phone on a dock */}
-      <Interactable label="הטלפון של אבא – לבדוק" standpoint="devices" onActivate={() => inspectDevice('r2-phone')}>
+      <Interactable label="הטלפון של אבא: לבדוק" standpoint="devices" onActivate={() => inspectDevice('r2-phone')}>
         <group position={[3.0, 0.81, DEVICES[1].z]}>
           <Box p={[0, 0.03, 0]} s={[0.14, 0.06, 0.16]} c="#2b2f34" m={0.6} r={0.4} />
           <Box p={[0.01, 0.15, 0]} s={[0.02, 0.2, 0.1]} rot={[0, 0, 0.25]} c="#15181b" m={0.5} r={0.25} />
@@ -82,7 +84,7 @@ function Devices({ solved }) {
         </group>
       </Interactable>
       {/* printer */}
-      <Interactable label="המדפסת – לבדוק" standpoint="devices" onActivate={() => inspectDevice('r2-printer')}>
+      <Interactable label="המדפסת: לבדוק" standpoint="devices" onActivate={() => inspectDevice('r2-printer')}>
         <group position={[3.0, 0.81, DEVICES[2].z]}>
           <Box p={[0, 0.13, 0]} s={[0.42, 0.26, 0.5]} c="#d8dadc" m={0.2} r={0.5} />
           <Box p={[-0.1, 0.27, 0]} s={[0.2, 0.02, 0.4]} c="#3a3f45" m={0.4} r={0.5} />
@@ -148,7 +150,7 @@ function Terminal({ solved }) {
   const open = useUI((s) => s.openOverlay);
   return (
     <group position={[0, 0, -1.75]}>
-      <Interactable label="מסוף המיון – לשבץ חבילות" standpoint="terminal" onActivate={() => (solved ? useUI.getState().say('companion', 'כל החבילות כבר נמסרו.') : open('sort'))}>
+      <Interactable label="מסוף המיון: לשבץ חבילות" standpoint="terminal" onActivate={() => (solved ? useUI.getState().say('companion', 'כל החבילות כבר נמסרו.') : open('sort'))}>
         <Box p={[0, 0.45, 0]} s={[1.3, 0.9, 0.5]} c="#3a4550" m={0.55} r={0.45} />
         <Box p={[0, 0.91, 0]} s={[1.36, 0.04, 0.56]} c="#1d2227" m={0.5} r={0.35} />
         <group position={[0, 1.18, -0.05]} rotation={[-0.3, 0, 0]}>
@@ -174,7 +176,7 @@ function MailWall() {
           </group>
         );
       })}
-      <Interactable label="שלט המיון – לקרוא" standpoint="mail" onActivate={() => findClue('r2-rule', 'כלל אחד בלבד בחדר הזה: הכתובת קובעת, לא השם. שמרתי ביומן.')}>
+      <Interactable label="שלט המיון: לקרוא" standpoint="mail" onActivate={() => findClue('r2-rule', 'כלל אחד בלבד בחדר הזה: הכתובת קובעת, לא השם. שמרתי ביומן.')}>
         <Sign p={[0.08, 2.5, 0]} rot={[0, Math.PI / 2, 0]} s={[1.6, 0.36]} w={1024} h={230} bg="#e6dcc8" border="#5b4636" pad={30} align="center"
           lines={[{ text: 'נוהל מיון', size: 64, color: '#2a2016', font: 'Rubik' }, { text: 'כל חבילה נמסרת לפי כתובת ה-MAC של היעד', size: 44, color: '#2a2016', weight: 500 }]} />
       </Interactable>
@@ -191,6 +193,8 @@ export function Scene() {
       <fog attach="fog" args={['#0b0f14', 8, 18]} />
       <RoomLights fill="#dbe4ee" ground="#2a2622" amount={0.65} solved={solved} />
       <RoomShell w={7} d={D} h={3.6} wall="#4f5f70" floor="#2f3236" ceil="#23272b" pilaster="#9aa6b2" cove="#e9f1ff" seed={21} />
+      <RoomDressing accent="#78BCE8" solved={solved} h={3.6} ids={['SW-01', 'SW-02']} />
+      <ScannerGantry accent="#78BCE8" />
       <LightPanel p={[-1.2, 3.58, -1]} color="#eef4ff" light={9} />
       <LightPanel p={[1.6, 3.58, 0.6]} color="#eef4ff" light={9} />
       <Conveyor solved={solved} />
@@ -244,7 +248,7 @@ function SortOverlay() {
         renderTarget={(t) => (
           <span className="device-target">
             <b>{t.name}</b>
-            <code dir="ltr">{journal.includes(t.id) ? JOURNAL[t.id].lines[0] : 'MAC: ? – בדקו את המכשיר'}</code>
+            <code dir="ltr">{journal.includes(t.id) ? JOURNAL[t.id].lines[0] : 'MAC: ? (בדקו את המכשיר)'}</code>
           </span>
         )}
         onWrong={() => useUI.getState().say('companion', R.lines.wrong)}

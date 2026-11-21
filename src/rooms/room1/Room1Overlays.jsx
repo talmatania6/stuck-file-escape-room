@@ -126,7 +126,7 @@ function NoteOverlay() {
           <li><b>צפצוף ארוך</b> = 1</li>
         </ul>
         <p>{entry.lines[4]}</p>
-        <p className="scribble">ותחזירו את הקפה למטבחון!! – ש.</p>
+        <p className="scribble">ותחזירו את הקפה למטבחון!! ש.</p>
         <p className="paper-note">נשמר ביומן המשימה</p>
         <button type="button" className="btn" onClick={close}>סגירה</button>
       </article>

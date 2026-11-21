@@ -9,6 +9,8 @@ import { hazard, sign, wood } from '../../engine/textures';
 import { Companion } from '../../companion/Companion';
 import { Device, Feedback } from '../../ui/Device';
 import { sfx } from '../../audio/audio';
+import { RoomDressing } from '../../engine/Dressing';
+import { CrateRail } from '../../engine/RoomHeroes';
 
 const R = roomByNumber(4);
 const D = 7;
@@ -26,7 +28,7 @@ const UDP_Q = [
   { q: 'בשיחת וידאו, מה חשוב יותר?', a: ['שהתמונה תזרום בלי עיכוב', 'שכל פריים יגיע, גם באיחור'], ok: 0 },
 ];
 const TCP_Q = [
-  { q: 'קובץ שחייב להגיע שלם – באיזה פרוטוקול שולחים?', a: ['UDP', 'TCP'], ok: 1 },
+  { q: 'קובץ שחייב להגיע שלם, באיזה פרוטוקול שולחים?', a: ['UDP', 'TCP'], ok: 1 },
   { q: 'מה TCP עושה כשחלק לא הגיע?', a: ['מוותר עליו', 'שולח אותו שוב', 'מוחק את כל הקובץ'], ok: 1 },
   { q: 'למה החלקים ממוספרים?', a: ['כדי שיהיו מהירים יותר', 'כדי להצפין אותם', 'כדי לסדר אותם מחדש ולגלות מה חסר'], ok: 2 },
 ];
@@ -93,11 +95,13 @@ export function Scene() {
       <fog attach="fog" args={['#0d0c0b', 8, 18]} />
       <RoomLights fill="#ece2d6" ground="#2a2018" amount={0.62} solved={solved} />
       <RoomShell w={7} d={D} h={3.8} wall="#5a5550" floor="#3a3a38" ceil="#24221f" pilaster="#6e5444" cove="#ffe1c2" panelCols={3} panelRows={2} seed={41} />
+      <RoomDressing accent="#F0A56C" solved={solved} h={3.8} ids={['TR-04', 'TR-05']} />
+      <CrateRail y={3.45} z={-0.4} />
       <LightPanel p={[-1.4, 3.78, -1.2]} color="#fff0dc" light={9} />
       <LightPanel p={[1.4, 3.78, 0.8]} color="#fff0dc" light={9} />
       <Pl p={[0, 0.005, -2.0]} rot={[-Math.PI / 2, 0, 0]} s={[6.4, 0.12]} map={floorLine} r={0.7} />
       <Crates solved={solved} />
-      <Interactable label="מסוף המשלוחים – להתחיל" standpoint="console" onActivate={() => (solved ? say('companion', 'כל החלקים כבר הגיעו.') : open('ship'))}>
+      <Interactable label="מסוף המשלוחים: להתחיל" standpoint="console" onActivate={() => (solved ? say('companion', 'כל החלקים כבר הגיעו.') : open('ship'))}>
         <group position={[1.6, 0, -1.5]}>
           <Box p={[0, 0.55, 0]} s={[0.7, 1.1, 0.5]} c="#3a3532" m={0.6} r={0.45} />
           <group position={[0, 1.3, 0.02]} rotation={[-0.35, 0, 0]}>
@@ -156,7 +160,7 @@ function ShipOverlay() {
     const ok = k === UDP_Q[i].ok;
     ok ? sfx.drop() : sfx.buzz();
     setUdpRes((r) => r.map((v, j) => (j === i ? (ok ? 'ok' : 'lost') : v)));
-    setMsg(ok ? { kind: 'ok', text: 'החבילה הגיעה.' } : { kind: 'error', text: k === -1 ? 'נגמר הזמן – החבילה אבדה, ואף אחד לא שולח אותה שוב.' : 'תשובה לא נכונה – החבילה אבדה, ואף אחד לא שולח אותה שוב.' });
+    setMsg(ok ? { kind: 'ok', text: 'החבילה הגיעה.' } : { kind: 'error', text: k === -1 ? 'נגמר הזמן, החבילה אבדה, ואף אחד לא שולח אותה שוב.' : 'תשובה לא נכונה, החבילה אבדה, ואף אחד לא שולח אותה שוב.' });
     setTimeout(() => {
       setLock(false);
       setMsg(null);
@@ -202,19 +206,19 @@ function ShipOverlay() {
     <Device title="מסוף המשלוחים" subtitle={round.startsWith('udp') ? 'סיבוב 1 · UDP' : round === 'intro' ? 'שני סיבובים' : 'סיבוב 2 · TCP'} wide tone="rust">
       {round === 'intro' && (
         <div className="ship-intro">
-          <p>הקובץ מתחלק לחלקים ממוספרים. נשלח אותם פעמיים – כל פעם בשיטה אחרת – ונראה מה קורה בדרך.</p>
+          <p>הקובץ מתחלק לחלקים ממוספרים. נשלח אותם פעמיים, כל פעם בשיטה אחרת, ונראה מה קורה בדרך.</p>
           <ul>
-            <li><b>סיבוב 1 – UDP:</b> {UDP_Q.length} שאלות מהירות, {UDP_SECONDS} שניות לכל אחת. עונים פעם אחת – ואין חזרה.</li>
-            <li><b>סיבוב 2 – TCP:</b> {TCP_Q.length} שאלות. טעות? החלק נשלח שוב עד שהוא מגיע נכון.</li>
+            <li><b>סיבוב 1 (UDP):</b> {UDP_Q.length} שאלות מהירות, {UDP_SECONDS} שניות לכל אחת. עונים פעם אחת, ואין חזרה.</li>
+            <li><b>סיבוב 2 (TCP):</b> {TCP_Q.length} שאלות. טעות? החלק נשלח שוב עד שהוא מגיע נכון.</li>
           </ul>
-          <button type="button" className="btn" onClick={() => { setRound('udp'); setI(0); say('companion', R.lines.udpIntro); }}>מתחילים – UDP</button>
+          <button type="button" className="btn" onClick={() => { setRound('udp'); setI(0); say('companion', R.lines.udpIntro); }}>מתחילים: UDP</button>
         </div>
       )}
       {round === 'udpDone' && (
         <div className="ship-intro">
           <Packets list={udpRes} />
-          <p>{udpRes.filter((r) => r === 'ok').length} מתוך {UDP_Q.length} חבילות הגיעו. מה שאבד – פשוט לא הגיע. ב-UDP אף אחד לא בודק ולא שולח שוב.</p>
-          <button type="button" className="btn" onClick={() => { setRound('tcp'); setI(0); say('companion', R.lines.tcpIntro); }}>לסיבוב 2 – TCP</button>
+          <p>{udpRes.filter((r) => r === 'ok').length} מתוך {UDP_Q.length} חבילות הגיעו. מה שאבד, פשוט לא הגיע. ב-UDP אף אחד לא בודק ולא שולח שוב.</p>
+          <button type="button" className="btn" onClick={() => { setRound('tcp'); setI(0); say('companion', R.lines.tcpIntro); }}>לסיבוב 2: TCP</button>
         </div>
       )}
       {round === 'done' && (

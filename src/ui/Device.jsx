@@ -23,7 +23,7 @@ export function Device({ title, subtitle, tone = 'steel', wide, children, onClos
             <strong>{title}</strong>
             {subtitle && <small>{subtitle}</small>}
           </div>
-          <button type="button" className="icon-btn" onClick={done} aria-label="סגירה – חזרה לחדר">
+          <button type="button" className="icon-btn" onClick={done} aria-label="סגירה: חזרה לחדר">
             <IconClose />
           </button>
         </div>

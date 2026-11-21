@@ -4,6 +4,7 @@ import { COMPANION_NAME, GENERIC_HELP, GLITCH_NO_MORE, JOURNAL, ROOMS, roomByNum
 import { sfx } from '../audio/audio';
 import { companionPortrait } from '../companion/companionSheet';
 import { IconBulb, IconClose, IconFile } from './Icons';
+import { usePointer } from '../game/settings';
 
 /* ------------------------------------------------------------------ */
 /* "נתקענו?" – free clarifications from the companion + paid Glitch hints */
@@ -59,7 +60,7 @@ export function HelpPanel({ roomN }) {
         <button type="button" className="icon-btn" onClick={() => setOpen(false)} aria-label="סגירה"><IconClose /></button>
       </div>
       <section className="help-chat">
-        <p className="sp-section">שאלה ל{COMPANION_NAME} <small>– בחינם, לא עולה זמן</small></p>
+        <p className="sp-section">שאלה ל{COMPANION_NAME} <small>(בחינם, לא עולה זמן)</small></p>
         <div className="help-msgs" ref={list} aria-live="polite">
           {msgs.length === 0 && (
             <p className="msg from-c">
@@ -84,11 +85,11 @@ export function HelpPanel({ roomN }) {
           <input id="help-input" value={text} onChange={(e) => setText(e.target.value)} placeholder="כתבו שאלה…" autoComplete="off" />
           <button type="submit" className="btn small">שאלה</button>
         </form>
-        <p className="fine">תשובות מוכנות מראש לפי מילות מפתח – לא בינה מלאכותית חיה.</p>
+        <p className="fine">תשובות מוכנות מראש לפי מילות מפתח, לא בינה מלאכותית חיה.</p>
       </section>
       {!inHub && (
         <section className="help-hints">
-          <p className="sp-section glitchy"><IconBulb /> רמז מגליץ׳ <small>– עולה 2 דקות</small></p>
+          <p className="sp-section glitchy"><IconBulb /> רמז מגליץ׳ <small>(עולה 2 דקות)</small></p>
           {revealed.length > 0 && (
             <ol className="hint-list">{revealed.map((h, i) => <li key={i}>{h}</li>)}</ol>
           )}
@@ -227,7 +228,7 @@ export function TimeUp() {
     <div className="overlay" role="alertdialog" aria-modal="true" aria-label="הזמן נגמר">
       <div className="modal">
         <h2>נגמר הזמן</h2>
-        <p>חצות עברה, והקובץ עוד לא יצא. המשימה התחרותית הסתיימה – אבל אפשר להמשיך לפתור את השכבות במצב תרגול, בלי שעון.</p>
+        <p>חצות עברה, והקובץ עוד לא יצא. המשימה התחרותית הסתיימה, אבל אפשר להמשיך לפתור את השכבות במצב תרגול, בלי שעון.</p>
         <div className="row">
           <button type="button" className="btn" onClick={game.enterPractice}>להמשיך במצב תרגול</button>
         </div>
@@ -238,6 +239,7 @@ export function TimeUp() {
 
 export function HoverLabel() {
   const label = useUI((s) => s.hovered);
+  const locked = usePointer((s) => s.locked);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   useEffect(() => {
     const onMove = (e) => setPos({ x: e.clientX, y: e.clientY });
@@ -245,7 +247,9 @@ export function HoverLabel() {
     return () => window.removeEventListener('pointermove', onMove);
   }, []);
   if (!label) return null;
-  return <div className="hover-label" style={{ left: pos.x + 18, top: pos.y + 16 }}>{label}</div>;
+  // with the mouse locked, the label sits just under the crosshair
+  const at = locked ? { left: window.innerWidth / 2 + 18, top: window.innerHeight / 2 + 16 } : { left: pos.x + 18, top: pos.y + 16 };
+  return <div className="hover-label" style={at}>{label}</div>;
 }
 
 export function Fade() {

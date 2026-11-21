@@ -9,6 +9,7 @@ import { roomByNumber } from '../../game/rooms';
 import { getCtx, playBeeps, sfx } from '../../audio/audio';
 import { CODE } from './data';
 import { Scope } from './Scope';
+import { Dust } from '../../engine/Atmosphere';
 
 const R = roomByNumber(1);
 const LINES = R.lines;
@@ -291,7 +292,7 @@ function MainCabinet({ power, solved }) {
 
   return (
     <group position={[-1.5, 0, -HALF]}>
-      <Interactable label={open || solved ? 'לוח חשמל ראשי' : 'לוח חשמל ראשי – פתיחה'} standpoint="cabinet" onActivate={activate}>
+      <Interactable label={open || solved ? 'לוח חשמל ראשי' : 'לוח חשמל ראשי: פתיחה'} standpoint="cabinet" onActivate={activate}>
         {/* hollow box: back, sides, top, bottom */}
         <mesh position={[0, 1.15, 0.02]}><boxGeometry args={[1.6, 2.0, 0.04]} /><meshStandardMaterial map={tex.inner} metalness={0.5} roughness={0.6} /></mesh>
         <mesh position={[-0.79, 1.15, 0.24]}><boxGeometry args={[0.03, 2.0, 0.46]} /><meshStandardMaterial map={tex.body} metalness={0.6} roughness={0.5} /></mesh>
@@ -421,9 +422,9 @@ function Workbench() {
         pad: 36,
         lines: [
           { text: 'כללי משמרת', size: 54, color: '#1b2430', font: 'Rubik' },
-          { text: '1. לפני כל תיקון – לנתק מתח', size: 30, color: '#1b2430', weight: 500, gap: 14 },
+          { text: '1. לפני כל תיקון: לנתק מתח', size: 30, color: '#1b2430', weight: 500, gap: 14 },
           { text: '2. לא נוגעים בכבל חשוף', size: 30, color: '#1b2430', weight: 500 },
-          { text: '3. כל תקלה – ליומן', size: 30, color: '#1b2430', weight: 500 },
+          { text: '3. כל תקלה: ליומן', size: 30, color: '#1b2430', weight: 500 },
           { text: '4. הקפה במטבחון בלבד', size: 30, color: '#1b2430', weight: 500 },
           { text: '(מישהו מחק את 4)', size: 26, color: '#7a3b22', weight: 400, gap: 22 },
         ],
@@ -502,7 +503,7 @@ function SignalGenerator() {
   };
   return (
     <group position={[-0.05, 0.93, -0.15]}>
-      <Interactable label={playing ? 'מחולל אותות – משדר…' : 'מחולל אותות – השמעת האות'} standpoint="bench" onActivate={activate}>
+      <Interactable label={playing ? 'מחולל אותות: משדר…' : 'מחולל אותות: השמעת האות'} standpoint="bench" onActivate={activate}>
         <mesh position={[0, 0.18, 0]}><boxGeometry args={[0.46, 0.36, 0.74]} /><meshStandardMaterial map={tex.body} metalness={0.6} roughness={0.45} /></mesh>
         {/* front panel faces +x (into the room) */}
         <mesh position={[0.231, 0.235, -0.11]} rotation={[0, Math.PI / 2, 0]} userData={{ noHighlight: true }}>
@@ -571,7 +572,7 @@ function Locker() {
         pad: 26,
         lines: [
           { text: 'תדריך משמרת', size: 50, color: '#1b2430', font: 'Rubik' },
-          { text: '— — — — — —', size: 26, color: '#8a8070' },
+          { text: '_ _ _ _ _ _ _ _', size: 26, color: '#8a8070' },
           { text: '~~~~~~~~~~~~~~', size: 26, color: '#8a8070' },
           { text: '~~~~~~~~~~', size: 26, color: '#8a8070' },
         ],
@@ -587,7 +588,7 @@ function Locker() {
   return (
     <group position={[2, 0, HALF]}>
       <Interactable
-        label={open ? 'ארונית צוות' : 'ארונית צוות – פתיחה'}
+        label={open ? 'ארונית צוות' : 'ארונית צוות: פתיחה'}
         standpoint="locker"
         onActivate={() => {
           setOpen((o) => !o);
@@ -614,8 +615,8 @@ function Locker() {
           <mesh position={[-0.495, 0.55, -0.014]} rotation={[0, Math.PI, 0]}><planeGeometry args={[0.5, 0.125]} /><meshStandardMaterial map={tex.tag} roughness={0.8} /></mesh>
           <mesh position={[-0.9, -0.05, -0.03]}><boxGeometry args={[0.03, 0.2, 0.03]} /><meshStandardMaterial color="#20252a" metalness={0.8} roughness={0.3} /></mesh>
         </group>
-        {/* the briefing card taped inside – readable once the locker is open */}
-        <Interactable label="תדריך משמרת – קריאה" enabled={open} onActivate={() => openOverlay('note')}>
+        {/* the briefing card taped inside, readable once the locker is open */}
+        <Interactable label="תדריך משמרת: קריאה" enabled={open} onActivate={() => openOverlay('note')}>
           <mesh position={[-0.12, 1.12, -0.045]} rotation={[0, Math.PI, 0]}>
             <planeGeometry args={[0.44, 0.29]} />
             <meshStandardMaterial map={tex.card} roughness={0.85} />
@@ -694,7 +695,7 @@ function ExitDoor({ power, solved }) {
 
   return (
     <group>
-      <Interactable label={solved ? 'חזרה לאולם הליבה' : 'דלת היציאה – נעולה'} standpoint="door" onActivate={activate}>
+      <Interactable label={solved ? 'חזרה לאולם הליבה' : 'דלת היציאה: נעולה'} standpoint="door" onActivate={activate}>
         {/* frame */}
         <mesh position={[4.44, 1.15, -1.21]}><boxGeometry args={[0.14, 2.3, 0.12]} /><meshStandardMaterial map={tex.frame} metalness={0.7} roughness={0.4} /></mesh>
         <mesh position={[4.44, 1.15, 0.21]}><boxGeometry args={[0.14, 2.3, 0.12]} /><meshStandardMaterial map={tex.frame} metalness={0.7} roughness={0.4} /></mesh>
@@ -772,7 +773,7 @@ function Keypad({ solved }) {
   return (
     <group position={[4.47, 1.38, -1.62]} rotation={[0, -Math.PI / 2, 0]}>
       <Interactable
-        label={solved ? 'לוח קוד הדלת' : 'לוח קוד הדלת – הקלדה'}
+        label={solved ? 'לוח קוד הדלת' : 'לוח קוד הדלת: הקלדה'}
         standpoint="door"
         onActivate={() => (solved ? say('companion', 'הקוד כבר התקבל.') : openOverlay('keypad'))}
       >
@@ -875,6 +876,95 @@ function Clutter() {
   );
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Extra electrical infrastructure on the north-east wall              */
+/* Junction boxes with status LEDs (red blink while the power is out,  */
+/* steady green once restored), a high-voltage sign, a floor trench    */
+/* and an amber status strip that wakes up with the power.             */
+/* ------------------------------------------------------------------ */
+
+const RED = new THREE.Color('#ff4a3d');
+const GREEN = new THREE.Color('#5dffb0');
+
+function Room1Extras({ power }) {
+  const leds = useRef([]);
+  const strip = useRef();
+  const tex = useMemo(
+    () => ({
+      box: metal('#4d5862', 83),
+      danger: sign({ w: 320, h: 220, bg: '#f2c230', pad: 20, align: 'center', lines: [{ text: '⚡', size: 70, color: '#151515' }, { text: 'סכנה: מתח גבוה', size: 38, color: '#151515', gap: 6 }] }),
+      tag: (n) => sign({ w: 192, h: 72, bg: '#d9d4c6', pad: 12, align: 'center', lines: [{ text: `JB-0${n}`, size: 40, color: '#1b2430', font: 'monospace' }] }),
+      haz: hazard([1, 1]),
+    }),
+    [],
+  );
+  const tags = useMemo(() => [1, 2, 3].map((n) => tex.tag(n)), [tex]);
+  useFrame(({ clock }) => {
+    const p = power.current;
+    const t = clock.elapsedTime;
+    leds.current.forEach((m, i) => {
+      if (!m) return;
+      if (p > 0.5) {
+        m.emissive.copy(GREEN);
+        m.emissiveIntensity = 2.2;
+      } else {
+        m.emissive.copy(RED);
+        m.emissiveIntensity = Math.sin(t * 2.2 + i * 1.7) > 0.3 ? 2.4 : 0.15;
+      }
+    });
+    if (strip.current) strip.current.emissiveIntensity = 0.12 + p * 1.6;
+  });
+  return (
+    <group>
+      {/* three junction boxes with conduits up to the cable tray */}
+      {[2.55, 3.15, 3.75].map((x, i) => (
+        <group key={x} position={[x, 1.55 + (i % 2) * 0.18, -HALF + 0.11]}>
+          <mesh><boxGeometry args={[0.46, 0.56, 0.2]} /><meshStandardMaterial map={tex.box} metalness={0.65} roughness={0.42} /></mesh>
+          <mesh position={[0, 0, 0.101]}><planeGeometry args={[0.38, 0.48]} /><meshStandardMaterial color="#3d4750" metalness={0.6} roughness={0.5} /></mesh>
+          <mesh position={[0, 0.17, 0.104]}><planeGeometry args={[0.2, 0.075]} /><meshStandardMaterial map={tags[i]} roughness={0.8} /></mesh>
+          <mesh position={[0.13, -0.17, 0.11]} userData={{ noHighlight: true }}>
+            <sphereGeometry args={[0.018, 10, 8]} />
+            <meshStandardMaterial ref={(el) => (leds.current[i] = el)} color="#111" emissive="#ff4a3d" emissiveIntensity={1} toneMapped={false} />
+          </mesh>
+          <mesh position={[0, 1.0 + (i % 2 ? -0.09 : 0), -0.02]}>
+            <cylinderGeometry args={[0.028, 0.028, 1.45 - (i % 2) * 0.18, 10]} />
+            <meshStandardMaterial color="#6d757c" metalness={0.8} roughness={0.3} />
+          </mesh>
+        </group>
+      ))}
+      {/* high-voltage warning sign */}
+      <mesh position={[3.15, 2.62, -HALF + 0.02]}>
+        <planeGeometry args={[0.62, 0.43]} />
+        <meshStandardMaterial map={tex.danger} roughness={0.7} />
+      </mesh>
+      {/* amber status strip along the top of the north wall, wakes up with the power */}
+      <mesh position={[1.4, 3.32, -HALF + 0.03]} userData={{ noHighlight: true }}>
+        <boxGeometry args={[5.6, 0.03, 0.02]} />
+        <meshStandardMaterial ref={strip} color="#000" emissive="#e9a45d" emissiveIntensity={0.12} toneMapped={false} />
+      </mesh>
+      {/* floor cable trench with a steel cover and hazard ends */}
+      <mesh position={[2.0, 0.006, -3.95]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[4.4, 0.3]} />
+        <meshStandardMaterial color="#3a4148" metalness={0.75} roughness={0.35} />
+      </mesh>
+      {[-0.15, 4.15].map((x) => (
+        <mesh key={x} position={[x, 0.008, -3.95]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.3, 0.3]} />
+          <meshStandardMaterial map={tex.haz} roughness={0.8} />
+        </mesh>
+      ))}
+      {Array.from({ length: 11 }, (_, i) => (
+        <mesh key={i} position={[0.0 + i * 0.4, 0.012, -3.95]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.02, 0.26]} />
+          <meshStandardMaterial color="#1b1f23" roughness={0.8} />
+        </mesh>
+      ))}
+      <Dust w={8.2} d={8.2} h={H} color="#ffd9a8" size={2.2} count={300} opacity={0.45} />
+    </group>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Scene                                                               */
 /* ------------------------------------------------------------------ */
@@ -915,6 +1005,7 @@ export function Room1Scene() {
       <ExitDoor power={power} solved={solved} />
       <Keypad solved={solved} />
       <Clutter />
+      <Room1Extras power={power} />
       <Companion position={[1.5, 0, -2.0]} facing={-0.35} onActivate={replay} />
     </>
   );

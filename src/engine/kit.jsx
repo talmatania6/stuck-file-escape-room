@@ -5,8 +5,9 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { panels, tiles, metal, sign, hazard } from './textures';
 import { Interactable } from './Interactable';
+import { Dust } from './Atmosphere';
 
-export function Mat({ c = '#808890', m = 0.4, r = 0.55, map = null, e, ei = 1, side, transparent, opacity, matRef }) {
+export function Mat({ c = '#808890', m = 0.4, r = 0.55, map = null, e, ei = 1, side, transparent, opacity, matRef, nmap, ns = 0.6 }) {
   return (
     <meshStandardMaterial
       ref={matRef}
@@ -14,6 +15,8 @@ export function Mat({ c = '#808890', m = 0.4, r = 0.55, map = null, e, ei = 1, s
       metalness={m}
       roughness={r}
       map={map}
+      normalMap={nmap || null}
+      normalScale={[ns, ns]}
       emissive={e || '#000000'}
       emissiveIntensity={e ? ei : 0}
       toneMapped={!e}
@@ -108,7 +111,7 @@ export function RoomShell({
   const coveStrip = (p, s) => (
     <group key={p.join(',')}>
       <Box p={p} s={s} c={trim} m={0.5} r={0.5} />
-      <Box p={[p[0], p[1] - 0.06, p[2]]} s={[s[0] * 0.98, 0.015, s[2] * 0.98]} c="#000" e={cove} ei={coveIntensity} noHighlight />
+      <Box p={[p[0], p[1] - 0.06, p[2]]} s={[s[0] * 0.98, 0.015, s[2] * 0.98]} c="#000" e={cove} ei={coveIntensity * 0.7} noHighlight />
     </group>
   );
   return (
@@ -136,6 +139,8 @@ export function RoomShell({
       <Box p={[0, 0.06, -D + 0.02]} s={[w, 0.12, 0.04]} map={t.trim} m={0.6} r={0.45} />
       <Box p={[-W + 0.02, 0.06, 0]} s={[0.04, 0.12, d]} map={t.trim} m={0.6} r={0.45} />
       <Box p={[W - 0.02, 0.06, 0]} s={[0.04, 0.12, d]} map={t.trim} m={0.6} r={0.45} />
+      {/* drifting dust in the light */}
+      <Dust w={w - 0.6} d={d - 0.6} h={h} color={cove} size={2.2} count={Math.round(w * d * 5)} />
     </group>
   );
 }
@@ -161,7 +166,7 @@ export function ExitDoor({ d = 7, open, onActivate, accent = '#3FD0E0' }) {
   });
   return (
     <group position={[0, 0, D]} rotation={[0, Math.PI, 0]}>
-      <Interactable label={open ? 'חזרה לאולם הליבה' : 'דלת היציאה – נעולה'} onActivate={onActivate}>
+      <Interactable label={open ? 'חזרה לאולם הליבה' : 'דלת היציאה: נעולה'} onActivate={onActivate}>
         <Box p={[-0.8, 1.22, 0.04]} s={[0.12, 2.44, 0.18]} c="#2a2f35" m={0.7} r={0.35} />
         <Box p={[0.8, 1.22, 0.04]} s={[0.12, 2.44, 0.18]} c="#2a2f35" m={0.7} r={0.35} />
         <Box p={[0, 2.46, 0.04]} s={[1.72, 0.12, 0.18]} c="#2a2f35" m={0.7} r={0.35} />

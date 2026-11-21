@@ -3,14 +3,15 @@ import { useGame, useUI } from '../game/store';
 import { COMPANION_NAME } from '../game/rooms';
 import { companionPortrait } from '../companion/companionSheet';
 import { IconBulb, IconClock, IconDoor, IconHand, IconKeyboard, IconMouse, IconSearch } from './Icons';
+import { useSettings } from '../game/settings';
 
 const STEPS = [
-  { icon: <IconMouse />, title: 'מסתובבים', text: 'גוררים את העכבר כדי להסתכל לכל הכיוונים – גם אחורה. אפשר גם עם החיצים במקלדת.' },
+  { icon: <IconMouse />, title: 'מסתובבים והולכים', text: 'לוחצים על המסך ומזיזים את העכבר כדי להסתכל, כמו במשחקי FPS (Esc משחרר). הולכים עם W A S D או החיצים. בהגדרות אפשר לעבור לגרירה.' },
   { icon: <IconHand />, title: 'לוחצים על חפצים', text: 'חפץ שאפשר לחקור מקבל הילה עדינה כשעוברים עליו. לוחצים כדי להתקרב, לפתוח או להפעיל.' },
-  { icon: <IconSearch />, title: 'אוספים רמזים', text: 'כל מה שמוצאים נשמר ביומן המשימה בצד המסך – לא צריך לזכור בעל פה.' },
+  { icon: <IconSearch />, title: 'אוספים רמזים', text: 'כל מה שמוצאים נשמר ביומן המשימה בצד המסך, ולא צריך לזכור בעל פה.' },
   { icon: <IconKeyboard />, title: 'פותרים', text: 'מקלידים תשובה או גוררים פריטים למקום. אפשר לתקן כמה שרוצים לפני הבדיקה.' },
-  { icon: <IconDoor />, title: 'חוזרים לאולם', text: 'אחרי שהחידה נפתרת, הדלת נפתחת וחוזרים לאולם הליבה – והדלת הבאה נפתחת.' },
-  { icon: <IconBulb />, title: 'נתקעתם?', text: `שאלות ל${COMPANION_NAME}, שמלווה אתכם – בחינם. רמז מגליץ׳ – עולה 2 דקות.` },
+  { icon: <IconDoor />, title: 'חוזרים לאולם', text: 'אחרי שהחידה נפתרת, הדלת נפתחת וחוזרים לאולם הליבה, שם נפתחת הדלת הבאה.' },
+  { icon: <IconBulb />, title: 'נתקעתם?', text: `שאלות ל${COMPANION_NAME}, שמלווה אתכם, הן בחינם. רמז מגליץ׳ עולה 2 דקות.` },
 ];
 
 /** How to play – shown before the clock starts. */
@@ -27,7 +28,7 @@ export function Onboarding() {
           <div>
             <span className="kicker">קבוצת {team}</span>
             <h1>יש לנו בעיה.</h1>
-            <p className="lead">הקובץ של נועה נתקע בדרך למרצה. יש לכם <b>20 דקות</b> לעבור את <b>שבע השכבות</b> של הרשת, לתקן מה שגליץ׳ שיבש – ולשלוח אותו לפני חצות.</p>
+            <p className="lead">הקובץ של נועה נתקע בדרך למרצה. יש לכם <b>30 דקות</b> לעבור את <b>שבע השכבות</b> של הרשת, לתקן מה שגליץ׳ שיבש, ולשלוח אותו לפני חצות.</p>
           </div>
         </div>
         <ol className="ob-steps">
@@ -67,9 +68,9 @@ export function Tutorial() {
   }, [done, finish]);
   if (done || busy) return null;
   const content = [
-    { icon: <IconMouse />, text: 'גררו את המסך כדי להסתובב. נסו להסתכל גם אחורה.' },
-    { icon: <IconHand />, text: 'יופי. עכשיו לחצו על חפץ שמקבל הילה – למשל המכשיר על שולחן העבודה.' },
-    { icon: <IconSearch />, text: 'ככה חוקרים. חלק מהחפצים נפתחים – שווה לבדוק ארונות ומגירות.' },
+    { icon: <IconMouse />, text: useSettings.getState().controlMode === 'mouse' ? 'לחצו על המסך והזיזו את העכבר כדי להסתובב. נסו להסתכל גם אחורה.' : 'גררו את המסך כדי להסתובב. נסו להסתכל גם אחורה.' },
+    { icon: <IconHand />, text: 'יופי. עכשיו לחצו על חפץ שמקבל הילה, למשל המכשיר על שולחן העבודה.' },
+    { icon: <IconSearch />, text: 'ככה חוקרים. חלק מהחפצים נפתחים, שווה לבדוק ארונות ומגירות.' },
   ][Math.min(step, 2)];
   return (
     <div className={`coach ${step >= 2 ? 'done' : ''}`} role="status">

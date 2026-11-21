@@ -52,10 +52,10 @@ function Spotlight({ selector, title, text, step, total, onNext, onSkip, nextLab
 }
 
 const ROOM_TOUR = [
-  { selector: '.standpoints', title: 'מפת החדר', text: 'קפיצה מהירה לכל אזור חשוב בחדר – בלי לחפש. החפצים עצמם מקבלים הילה כשעוברים עליהם.' },
-  { selector: '.hud .timer', title: 'השעון', text: '20 דקות לכל המשימה. הוא ממשיך לרוץ גם באולם ובין החדרים.' },
+  { selector: '.standpoints', title: 'מפת החדר', text: 'קפיצה מהירה לכל אזור חשוב בחדר, בלי לחפש. אפשר גם ללכת חופשי עם W A S D או החיצים. החפצים עצמם מקבלים הילה כשעוברים עליהם.' },
+  { selector: '.hud .timer', title: 'השעון', text: '30 דקות לכל המשימה. הוא ממשיך לרוץ גם באולם ובין החדרים.' },
   { selector: '.file-progress', title: 'הקובץ של נועה', text: 'כל שכבה שתתקנו משחררת חלק מהקובץ. כאן רואים כמה כבר עשיתם.' },
-  { selector: '.hud-btn.help', title: 'נתקעתם?', text: 'כאן אפשר לשאול שאלות (בחינם) או לבקש רמז מגליץ׳ – שעולה 2 דקות.' },
+  { selector: '.hud-btn.help', title: 'נתקעתם?', text: 'כאן אפשר לשאול שאלות (בחינם) או לבקש רמז מגליץ׳, שעולה 2 דקות.' },
 ];
 
 /** First visit to room 1: a short tour of the screen, after the "turn around / click" coach marks. */
@@ -101,7 +101,7 @@ export function JournalTip() {
     <Spotlight
       selector=".journal-btn"
       title="נשמר ביומן!"
-      text="כל רמז שמוצאים נשמר כאן – לכל חדר בנפרד. לא צריך לחזור אליו בחדר או לזכור בעל פה."
+      text="כל רמז שמוצאים נשמר כאן, לכל חדר בנפרד. לא צריך לחזור אליו בחדר או לזכור בעל פה."
       step={1}
       total={1}
       nextLabel="לפתוח את היומן"

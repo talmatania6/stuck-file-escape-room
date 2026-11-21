@@ -8,6 +8,8 @@ import { wood } from '../../engine/textures';
 import { Companion } from '../../companion/Companion';
 import { Device, MatchBoard } from '../../ui/Device';
 import { sfx } from '../../audio/audio';
+import { RoomDressing } from '../../engine/Dressing';
+import { CounterGlow } from '../../engine/RoomHeroes';
 
 const R = roomByNumber(7);
 const D = 7;
@@ -36,6 +38,8 @@ export function Scene() {
       <fog attach="fog" args={['#0f0e0b', 8, 18]} />
       <RoomLights fill="#f3ead8" ground="#2a2418" amount={0.65} solved={solved} />
       <RoomShell w={7} d={D} h={3.8} wall="#d7d0c2" floor="#3b3a37" ceil="#2b2925" pilaster="#b39552" cove="#fff2d6" panelCols={3} panelRows={3} seed={71} />
+      <RoomDressing accent="#E7C16D" solved={solved} h={3.8} units={false} />
+      <CounterGlow solved={solved} />
       <LightPanel p={[-1.6, 3.78, 0.6]} color="#fff6e6" light={8} />
       <LightPanel p={[1.6, 3.78, 0.6]} color="#fff6e6" light={8} />
       {/* service windows behind the counter */}
@@ -52,7 +56,7 @@ export function Scene() {
         );
       })}
       {/* the counter with the forms tray */}
-      <Interactable label="דלפק הקבלה – טפסים" standpoint="counter" onActivate={() => (solved ? say('companion', 'כל הבקשות כבר אושרו.') : open('forms'))}>
+      <Interactable label="דלפק הקבלה: טפסים" standpoint="counter" onActivate={() => (solved ? say('companion', 'כל הבקשות כבר אושרו.') : open('forms'))}>
         <group position={[0, 0, -2.4]}>
           <Box p={[0, 0.55, 0]} s={[6.4, 1.1, 0.6]} map={counter} r={0.5} />
           <Box p={[0, 1.12, 0]} s={[6.5, 0.05, 0.7]} c="#e9e4d8" m={0.1} r={0.3} />
@@ -85,9 +89,9 @@ export function Scene() {
         {[[-0.4, 0.2, '#f4f1ea'], [0.35, 0.25, '#fff3b0'], [-0.25, -0.22, '#d6ecf7']].map(([x, y, c], i) => (
           <Box key={i} p={[x, y, 0.025]} s={[0.36, 0.26, 0.005]} rot={[0, 0, (i - 1) * 0.06]} c={c} r={0.9} />
         ))}
-        <Interactable label="כרטיס סגל הקורס – לקרוא" standpoint="board" onActivate={() => findClue('r7-email', R.lines.card)}>
+        <Interactable label="כרטיס סגל הקורס: לקרוא" standpoint="board" onActivate={() => findClue('r7-email', R.lines.card)}>
           <Sign p={[0.35, -0.2, 0.03]} s={[0.5, 0.3]} w={512} h={300} bg="#ffffff" border="#d9b25f" pad={24}
-            lines={[{ text: 'סגל הקורס', size: 44, color: '#1b2430', font: 'Rubik' }, { text: 'ד״ר לוי – מרצה', size: 36, color: '#1b2430', gap: 8 }, { text: LECTURER_EMAIL, size: 30, color: '#1b2430', dir: 'ltr', font: 'Courier New' }]} />
+            lines={[{ text: 'סגל הקורס', size: 44, color: '#1b2430', font: 'Rubik' }, { text: 'ד״ר לוי, מרצה', size: 36, color: '#1b2430', gap: 8 }, { text: LECTURER_EMAIL, size: 30, color: '#1b2430', dir: 'ltr', font: 'Courier New' }]} />
         </Interactable>
       </group>
       <ExitDoor d={D} open={solved} accent="#d9b25f" onActivate={() => (solved ? leaveRoom(7) : say('companion', 'אף אחד לא יוצא בלי חותמת.'))} />

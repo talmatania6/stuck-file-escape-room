@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export const GAME_MS = 20 * 60 * 1000;
+export const GAME_MS = 30 * 60 * 1000;
 export const HINT_PENALTY_MS = 2 * 60 * 1000;
 export const WRONG_ROUTE_PENALTY_MS = 60 * 1000;
 export const TWIST_ROOM = 8;
@@ -18,7 +18,7 @@ const fresh = {
   solved: [], // 1..7, and 8 = the twist
   journal: [], // ids of clues the team has found
   roomState: {}, // small per-room flags worth keeping across reloads
-  practice: false, // after the 20 minutes ran out
+  practice: false, // after the 30 minutes ran out
   hubEvent: null, // { type: 'intro' } | { type: 'solved', n }
   celebrated: [], // rooms whose "return to hub" celebration already played
   tourDone: false, // first-visit tour of the screen (room 1)

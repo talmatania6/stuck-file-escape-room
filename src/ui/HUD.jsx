@@ -3,7 +3,8 @@ import { useGame, useUI, remainingMs, formatTime, leaveRoom } from '../game/stor
 import { layerLabel } from '../game/rooms';
 import { setMuted, setTension } from '../audio/audio';
 import { doorPos } from '../hub/HubScene';
-import { IconBook, IconCompass, IconDoor, IconHelp, IconMotion, IconMute, IconSound } from './Icons';
+import { IconBook, IconCompass, IconDoor, IconHelp, IconMute, IconSound } from './Icons';
+import { SettingsButton } from './Settings';
 
 export function useNow(ms = 250) {
   const [now, setNow] = useState(Date.now());
@@ -31,7 +32,6 @@ export function Timer() {
 
 export function SettingsButtons() {
   const muted = useGame((s) => s.muted);
-  const calm = useGame((s) => s.reduceMotion);
   const g = useGame.getState;
   return (
     <>
@@ -39,10 +39,7 @@ export function SettingsButtons() {
         onClick={() => { g().setMuted(!muted); setMuted(!muted); }}>
         {muted ? <IconMute /> : <IconSound />}
       </button>
-      <button type="button" className="icon-btn" aria-pressed={calm} aria-label={calm ? 'החזרת אנימציות' : 'הפחתת אנימציות'} title={calm ? 'החזרת אנימציות' : 'הפחתת אנימציות'}
-        onClick={() => g().setReduceMotion(!calm)}>
-        <IconMotion off={calm} />
-      </button>
+      <SettingsButton />
     </>
   );
 }
@@ -55,9 +52,10 @@ export function FileProgress() {
     <div className="file-progress" aria-label={`${k} מתוך 7 שכבות תוקנו`}>
       <span className="fp-label">הקובץ של נועה</span>
       <div className="fp-bar">
-        {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-          <span key={n} className={`fp-seg ${solved.includes(n) ? 'on' : ''}`} title={layerLabel(n)}>{n}</span>
-        ))}
+        {[1, 2, 3, 4, 5, 6, 7].map((n) => {
+          const next = !solved.includes(n) && [1, 2, 3, 4, 5, 6, 7].find((k) => !solved.includes(k)) === n;
+          return <span key={n} className={`fp-seg ${solved.includes(n) ? 'on' : ''} ${next ? 'next' : ''}`} title={layerLabel(n)}>{n}</span>;
+        })}
       </div>
       <span className="fp-count">{k}/7</span>
     </div>

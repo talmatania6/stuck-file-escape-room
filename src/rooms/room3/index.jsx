@@ -9,6 +9,8 @@ import { wood } from '../../engine/textures';
 import { Companion } from '../../companion/Companion';
 import { Device, Feedback } from '../../ui/Device';
 import { sfx } from '../../audio/audio';
+import { RoomDressing } from '../../engine/Dressing';
+import { PacketStream, FaultBeacon } from '../../engine/RoomHeroes';
 
 const R = roomByNumber(3);
 const D = 7;
@@ -98,6 +100,9 @@ export function Scene() {
       <fog attach="fog" args={['#0a100d', 8, 18]} />
       <RoomLights fill="#d8e6df" ground="#1d2a24" amount={0.6} solved={solved} />
       <RoomShell w={7} d={D} h={3.6} wall="#34463f" floor="#22282a" ceil="#1d2422" pilaster="#5c6a64" cove="#dff5ea" seed={31} />
+      <RoomDressing accent="#62D7A4" solved={solved} h={3.6} ids={['RT-01', 'RT-02']} />
+      <PacketStream y={3.24} />
+            <FaultBeacon position={[-3.46, 2.62, 0.6]} rotation={[0, Math.PI / 2, 0]} />
       <LightPanel p={[0, 3.58, -0.6]} s={[1.6, 0.04, 0.5]} color="#f1fff8" light={10} />
       <LightPanel p={[0, 3.58, 1.8]} s={[1.6, 0.04, 0.5]} color="#f1fff8" light={6} />
       {/* the map wall */}
@@ -106,7 +111,7 @@ export function Scene() {
         <Pl p={[0, 0, 0.045]} s={[4.0, 2.05]} map={map} basic />
       </group>
       {/* routing desk */}
-      <Interactable label="עמדת הניתוב – לבחור מסלול" standpoint="desk" onActivate={() => (solved ? say('companion', 'המסלול כבר נבחר.') : open('route'))}>
+      <Interactable label="עמדת הניתוב: לבחור מסלול" standpoint="desk" onActivate={() => (solved ? say('companion', 'המסלול כבר נבחר.') : open('route'))}>
         <group position={[0, 0, -1.55]}>
           <Box p={[0, 0.74, 0]} s={[2.2, 0.06, 0.8]} map={desk} r={0.5} />
           <Box p={[-1.0, 0.37, 0]} s={[0.08, 0.74, 0.7]} c="#2a302d" m={0.6} r={0.4} />
@@ -140,7 +145,7 @@ export function Scene() {
         </group>
       </Interactable>
       {/* status board */}
-      <Interactable label="לוח סטטוס הנתבים – לקרוא" standpoint="board" onActivate={() => { findClue('r3-status', R.lines.status); findClue('r3-server'); }}>
+      <Interactable label="לוח סטטוס הנתבים: לקרוא" standpoint="board" onActivate={() => { findClue('r3-status', R.lines.status); findClue('r3-server'); }}>
         <group position={[3.42, 1.75, 0.4]} rotation={[0, -Math.PI / 2, 0]}>
           <Box s={[1.7, 1.25, 0.06]} c="#121615" m={0.5} r={0.4} />
           <Sign p={[0, 0, 0.032]} s={[1.6, 1.15]} lit w={900} h={650} bg="#0c1813" pad={40}
@@ -148,7 +153,7 @@ export function Scene() {
               { text: 'סטטוס נתבים', size: 64, color: '#DDE8EF', font: 'Rubik' },
               { text: 'R1 · תקין', size: 46, color: '#65CDAA', gap: 10 },
               { text: 'R2 · תקין', size: 46, color: '#65CDAA' },
-              { text: 'R3 · תקלה – לא מעביר מנות', size: 46, color: '#EF6D73' },
+              { text: 'R3 · תקלה: לא מעביר מנות', size: 46, color: '#EF6D73' },
               { text: 'R4 · תקין', size: 46, color: '#65CDAA' },
               { text: 'R5 · תקין      R6 · תקין', size: 46, color: '#65CDAA' },
             ]} />

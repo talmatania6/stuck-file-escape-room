@@ -10,6 +10,8 @@ import { Companion } from '../../companion/Companion';
 import { LAYERS } from '../../hub/doorArt';
 import { Device, Feedback } from '../../ui/Device';
 import { sfx } from '../../audio/audio';
+import { RoomDressing } from '../../engine/Dressing';
+import { CommandDisplays } from '../../engine/RoomHeroes';
 
 const R = roomByNumber(8);
 
@@ -66,10 +68,12 @@ export function Scene() {
       <fog attach="fog" args={['#0b0811', 7, 16]} />
       <RoomLights fill="#d9cdee" ground="#1d1533" amount={sent ? 0.8 : 0.45} />
       <RoomShell w={7} d={7} h={3.6} wall="#2a2238" floor="#1d1828" ceil="#16121f" pilaster="#4d3f63" cove={sent ? '#d8ffef' : '#c9a8ff'} coveIntensity={sent ? 2.2 : 1.2} seed={81} />
+      <RoomDressing accent="#79DDE5" solved={sent} h={3.6} units={false} />
+      <CommandDisplays sent={sent} />
       <pointLight position={[0, 3.2, -1]} intensity={sent ? 14 : 6} distance={10} color={sent ? '#e8fff6' : '#cdb6ff'} />
       <pointLight ref={glitchLight} position={[0, 2.4, -2.2]} intensity={0} distance={6} color="#FFB547" />
       <Screens failed={failed} sent={sent} />
-      <Interactable label="עמדת השליחה – לשלוח את הקובץ" standpoint="console" onActivate={() => open('send')}>
+      <Interactable label="עמדת השליחה: לשלוח את הקובץ" standpoint="console" onActivate={() => open('send')}>
         <group position={[0, 0, -1.3]}>
           <Cyl p={[0, 0.5, 0]} a={[0.55, 0.65, 1.0, 40]} c="#2e2640" m={0.7} r={0.35} />
           <Cyl p={[0, 1.02, 0]} a={[0.72, 0.72, 0.05, 40]} c="#cfd5db" m={0.85} r={0.25} />
@@ -119,7 +123,7 @@ function SendOverlay() {
     if (norm(to) === norm(LECTURER_EMAIL)) {
       sfx.success();
       sfx.fragment();
-      setMsg({ kind: 'ok', text: 'הקובץ נשלח בהצלחה – 23:59:58' });
+      setMsg({ kind: 'ok', text: 'הקובץ נשלח בהצלחה · 23:59:58' });
       useGame.getState().solveRoom(8);
       setTimeout(() => say('companion', 'נשלח. שתי שניות לפני חצות.'), 600);
       setTimeout(() => {
@@ -143,7 +147,7 @@ function SendOverlay() {
           <label htmlFor="mail-to">אל</label>
           <input id="mail-to" ref={input} dir="ltr" value={to} readOnly={!failed || sent} onChange={(e) => { setTo(e.target.value); setMsg(null); }} className={failed && !sent ? 'editable' : ''} autoComplete="off" spellCheck={false} />
         </div>
-        <div className="mail-row"><span>נושא</span><b>הגשת עבודה – נועה</b></div>
+        <div className="mail-row"><span>נושא</span><b>הגשת עבודה: נועה</b></div>
         <div className="mail-row"><span>קובץ</span><b className="attach">עבודה_סופית.pdf</b></div>
         <p className="mail-body">שלום ד״ר לוי, מצורפת העבודה. תודה, נועה</p>
         {failed && !sent && (

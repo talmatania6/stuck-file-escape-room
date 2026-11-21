@@ -1,0 +1,10 @@
+Graphics assets – all CC0 (public domain), free for any use.
+
+hdri/warehouse.exr, hdri/lab.exr
+  Poly Haven (polyhaven.com), via the @pmndrs/assets package (CC0-1.0).
+
+normals/brushed.webp, diamond-plate.webp, grooves.webp, fine.webp, brushed-fine.webp, tiles.webp
+  Tileable normal maps from the @pmndrs/assets package (CC0-1.0).
+
+normals/scratched.webp
+  "Scratched Gold 01" normal map, cgbookcase.com (CC0), via the three.js examples.

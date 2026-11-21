@@ -182,7 +182,7 @@ function Projector() {
  * facing direction. Rooms only pass position / facing / onActivate, so this can
  * later be swapped for a real 3D model.
  */
-export function Companion({ position, facing = 0, onActivate, label = `${COMPANION_NAME} – לשמוע שוב` }) {
+export function Companion({ position, facing = 0, onActivate, label = `${COMPANION_NAME}: לשמוע שוב` }) {
   const [sheet, setSheet] = useState(null);
   useEffect(() => {
     loadCompanionSheet().then(setSheet);
@@ -214,7 +214,7 @@ export function Companion({ position, facing = 0, onActivate, label = `${COMPANI
     const vz = camera.position.z - position[2];
     if (plane.current) {
       plane.current.rotation.y = Math.atan2(vx, vz);
-      plane.current.position.y = BASE_Y + HEIGHT / 2 + (calm ? 0 : Math.sin(t * 1.1) * 0.02);
+      plane.current.position.y = BASE_Y + HEIGHT / 2 + (calm ? 0 : Math.sin(t * 1.55) * 0.035);
     }
     const fx = Math.sin(facing), fz = Math.cos(facing);
     const rx = -Math.cos(facing), rz = Math.sin(facing);

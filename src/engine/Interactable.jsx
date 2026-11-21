@@ -4,6 +4,7 @@ import { useUI } from '../game/store';
 import { drag } from './LookControls';
 
 const HIGHLIGHT = '#3FD0E0';
+const REACH = 4.2; // metres – how close you must be to use an object in FPS mode
 
 /**
  * Wraps any 3D object so it can be explored: a soft turquoise glow on hover,
@@ -56,7 +57,13 @@ export function Interactable({ label, onActivate, standpoint, enabled = true, ch
       onClick={(e) => {
         e.stopPropagation();
         if (!enabled || drag.moved) return;
-        if (standpoint) setStandpoint(standpoint);
+        if (document.pointerLockElement) {
+          // FPS mode: the player walks on their own – never pull the camera; just need to be close enough
+          if (e.distance > REACH) {
+            setHovered(`${label} · קרבו כדי להפעיל`);
+            return;
+          }
+        } else if (standpoint) setStandpoint(standpoint);
         const ui = useUI.getState();
         if (ui.tutorialStep === 1) ui.setTutorialStep(2);
         onActivate?.();

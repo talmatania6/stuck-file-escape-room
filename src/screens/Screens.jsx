@@ -4,7 +4,10 @@ import { useGame, useUI, leaveRoom } from '../game/store';
 import { roomByNumber } from '../game/rooms';
 import { ROOM_MODULES } from '../rooms';
 import { getCtx, setMuted, sfx, startMusic } from '../audio/audio';
-import { LookControls } from '../engine/LookControls';
+import { LookControls, fpsEvents } from '../engine/LookControls';
+import { useSettings, QUALITY } from '../game/settings';
+import { ViewHint, SettingsButton } from '../ui/Settings';
+import { PostFX } from '../engine/PostFX';
 import { HubScene, HUB_STANDPOINTS } from '../hub/HubScene';
 import { HUD } from '../ui/HUD';
 import { HelpPanel, Journal, SuccessCard } from '../ui/Panels';
@@ -20,6 +23,7 @@ function wakeAudio() {
 }
 
 const GL = { antialias: true, powerPreference: 'high-performance' };
+const useDpr = () => QUALITY[useSettings((s) => s.quality)]?.dpr || [1, 1.5];
 
 /* ------------------------------------------------------------------ */
 
@@ -35,17 +39,19 @@ export function StartScreen() {
     <div className="start-screen">
       <Canvas className="bg-canvas" camera={{ fov: 55, position: [2, 1.5, 2] }} dpr={[1, 1.5]} gl={GL}>
         <NoaScene />
+        <PostFX strength={0.4} radius={0.3} threshold={1.15} vignette={0.2} />
       </Canvas>
+      <SettingsButton className="icon-btn start-settings" />
       <div className="start-panel">
         <span className="kicker">חדר בריחה · שבע השכבות של הרשת</span>
         <h1>הקובץ התקוע</h1>
-        <p className="lead">נועה צריכה להגיש עבודה עד חצות. הקובץ נתקע באמצע הדרך – ומישהו בתוך המערכת לא ממש עוזר.</p>
+        <p className="lead">נועה צריכה להגיש עבודה עד חצות. הקובץ נתקע באמצע הדרך, ומישהו בתוך המערכת לא ממש עוזר.</p>
         <div className="start-stats">
-          <div className="big-timer" aria-label="20 דקות למשימה">
+          <div className="big-timer" aria-label="30 דקות למשימה">
             <span className="bt-label">הזמן שלכם</span>
             <span className="bt-digits" dir="ltr">
               <span className="bt-ghost" aria-hidden="true">88:88</span>
-              <span className="bt-live">20<i>:</i>00</span>
+              <span className="bt-live">30<i>:</i>00</span>
             </span>
           </div>
           <div className="layers-chip"><b>7</b><span>שכבות לתקן</span></div>
@@ -65,7 +71,7 @@ export function StartScreen() {
               <input id="team" value={team} onChange={(e) => setTeam(e.target.value)} placeholder="למשל: הנתבים העליזים" maxLength={40} autoComplete="off" />
               <button type="submit" className="btn">הבא</button>
             </div>
-            <p className="fine">לפני שמתחילים – הסבר קצר איך משחקים. השעון עוד לא רץ.</p>
+            <p className="fine">לפני שמתחילים, הסבר קצר איך משחקים. השעון עוד לא רץ.</p>
           </form>
         )}
       </div>
@@ -76,19 +82,22 @@ export function StartScreen() {
 /* ------------------------------------------------------------------ */
 
 export function HubScreen() {
+  const dpr = useDpr();
   useEffect(() => {
     useUI.getState().setStandpoint('center');
     useUI.getState().setSuccessOpen(false);
   }, []);
   return (
     <div className="room-screen">
-      <Canvas className="game-canvas" camera={{ fov: 72, near: 0.05, far: 80 }} dpr={[1, 1.5]} gl={GL}>
+      <Canvas className="game-canvas" camera={{ fov: 72, near: 0.05, far: 80 }} dpr={dpr} gl={GL} events={fpsEvents}>
         <Suspense fallback={null}>
           <HubScene />
         </Suspense>
-        <LookControls standpoints={HUB_STANDPOINTS} />
+        <LookControls standpoints={HUB_STANDPOINTS} bounds={{ radius: 5.4 }} />
+        <PostFX />
       </Canvas>
       <HUD />
+      <ViewHint />
       <HelpPanel />
       <Journal />
     </div>
@@ -98,6 +107,7 @@ export function HubScreen() {
 /* ------------------------------------------------------------------ */
 
 export function RoomScreen() {
+  const dpr = useDpr();
   const n = useGame((s) => s.currentRoom);
   const solved = useGame((s) => s.solved.includes(n));
   const room = roomByNumber(n);
@@ -132,13 +142,16 @@ export function RoomScreen() {
   const { Scene, Overlays } = mod;
   return (
     <div className={`room-screen room-${n}`}>
-      <Canvas key={n} className="game-canvas" camera={{ fov: 72, near: 0.05, far: 80 }} dpr={[1, 1.5]} gl={GL}>
+      <Canvas key={n} className="game-canvas" camera={{ fov: 72, near: 0.05, far: 80 }} dpr={dpr} gl={GL} events={fpsEvents}>
         <Suspense fallback={null}>
           <Scene />
         </Suspense>
-        <LookControls standpoints={mod.standpoints} />
+        <LookControls standpoints={mod.standpoints} bounds={mod.bounds} />
+        <PostFX />
       </Canvas>
       <HUD room={room} />
+      <ViewHint />
+      <RoomTitle key={`title-${n}`} room={room} />
       <StandpointNav standpoints={mod.standpoints} />
       {n === 1 && <Tutorial />}
       {n === 1 && <RoomTour />}
@@ -151,11 +164,41 @@ export function RoomScreen() {
   );
 }
 
+/** Cinematic title card shown for a moment when a room opens. Never blocks clicks. */
+function RoomTitle({ room }) {
+  // wait until the scene has actually drawn a few frames (shader compile can stall the first ones)
+  const [phase, setPhase] = useState('wait');
+  useEffect(() => {
+    let n = 0, raf;
+    const tick = () => {
+      if (++n >= 4) setPhase('show');
+      else raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  useEffect(() => {
+    if (phase !== 'show') return;
+    const t = setTimeout(() => setPhase('done'), 2700);
+    return () => clearTimeout(t);
+  }, [phase]);
+  if (phase !== 'show') return null;
+  const twist = room.n === 8;
+  return (
+    <div className="room-title" aria-hidden="true" style={{ '--room-accent': room.accent }}>
+      <span className="rt-code" dir="ltr">{twist ? 'CONTROL ROOM' : `LAYER ${room.code} · ${room.en}`}</span>
+      <span className="rt-line" />
+      <strong className="rt-name">{room.he}</strong>
+      <span className="rt-place">{room.place}</span>
+    </div>
+  );
+}
+
 function StandpointNav({ standpoints }) {
   const current = useUI((s) => s.standpoint);
   const set = useUI((s) => s.setStandpoint);
   return (
-    <nav className="standpoints" aria-label="מפת החדר – מעבר בין אזורים">
+    <nav className="standpoints" aria-label="מפת החדר: מעבר בין אזורים">
       <span className="sp-title">מפת החדר</span>
       {Object.entries(standpoints).map(([id, sp]) => (
         <button key={id} type="button" className={id === current ? 'active' : ''} aria-pressed={id === current} onClick={() => set(id)}>
@@ -185,6 +228,7 @@ export function VictoryScreen() {
           <HubScene celebrate />
         </Suspense>
         <OrbitCam />
+        <PostFX strength={0.6} radius={0.35} vignette={0.2} />
       </Canvas>
       <Victory />
     </div>

@@ -22,13 +22,14 @@ export const standpoints = {
 
 // The correct order.
 const LINES = [
-  { id: 'open', who: 'המחשב של נועה', text: 'שלום שרת, אפשר לפתוח שיחה?' },
-  { id: 'ack', who: 'השרת', text: 'כן, השיחה פתוחה. אפשר לשלוח.' },
-  { id: 'p1', who: 'המחשב של נועה', text: 'שולח את חלק 1 של הקובץ…' },
-  { id: 'p2', who: 'המחשב של נועה', text: 'שולח את חלק 2 של הקובץ…' },
-  { id: 'close', who: 'השרת', text: 'קיבלתי הכל. אפשר לסגור את השיחה.' },
+  { id: 'open', who: 'המחשב של נועה', text: 'מבקש לפתוח סשן העלאה לשרת המכללה.' },
+  { id: 'ack', who: 'השרת', text: 'הסשן פתוח. מספר סשן: 4471.' },
+  { id: 'p1', who: 'המחשב של נועה', text: 'חלק 1 מתוך 3 נשלח. נשמרה נקודת ביקורת.' },
+  { id: 'cut', who: 'המרכזייה', text: '⚡ הקו נפל באמצע חלק 2.' },
+  { id: 'resume', who: 'המחשב של נועה', text: 'חוזר לסשן 4471, ממשיך מנקודת הביקורת, מחלק 2.' },
+  { id: 'close', who: 'השרת', text: 'חלקים 2 ו-3 התקבלו. סוגרים את הסשן.' },
 ];
-const SHUFFLED = ['p2', 'close', 'open', 'p1', 'ack'];
+const SHUFFLED = ['resume', 'close', 'open', 'cut', 'p1', 'ack'];
 
 function Switchboard({ solved }) {
   const lamps = useRef([]);
@@ -46,7 +47,17 @@ function Switchboard({ solved }) {
   }, []);
   return (
     <group position={[0, 0, -3.3]}>
+      {/* warm backlight halo, makes the board the focal point of the room */}
+      <Box p={[0, 1.6, -0.1]} s={[3.62, 2.42, 0.02]} c="#000" e="#ffb27a" ei={solved ? 1.6 : 1.05} noHighlight />
       <Box p={[0, 1.6, 0]} s={[3.4, 2.2, 0.18]} map={panel} r={0.6} />
+      {/* brass frame */}
+      {[[0, 2.72, 3.5, 0.05], [0, 0.48, 3.5, 0.05]].map(([x, y, w, h]) => (
+        <Box key={y} p={[x, y, 0.1]} s={[w, h, 0.04]} c="#b58a5a" m={0.85} r={0.3} />
+      ))}
+      {[-1.73, 1.73].map((x) => (
+        <Box key={x} p={[x, 1.6, 0.1]} s={[0.05, 2.29, 0.04]} c="#b58a5a" m={0.85} r={0.3} />
+      ))}
+      <pointLight position={[0, 2.0, 1.1]} intensity={3.2} distance={3.4} decay={1.6} color="#ffd1a3" />
       <Box p={[0, 0.5, 0.25]} s={[3.4, 0.08, 0.6]} map={panel} r={0.6} />
       <Box p={[0, 0.25, 0.25]} s={[3.3, 0.5, 0.5]} c="#3b2c24" r={0.7} />
       {Array.from({ length: 60 }, (_, i) => {
@@ -77,13 +88,13 @@ export function Scene() {
   const say = useUI((s) => s.say);
   const replay = useUI((s) => s.replayBubble);
   const desk = useMemo(() => wood([1, 1]), []);
-  const book = useMemo(() => sign({ w: 512, h: 360, bg: '#efe6d2', pad: 26, lines: [{ text: 'יומן המרכזייה', size: 52, color: '#3b2c24', font: 'Rubik' }, { text: 'פתיחה ← העברה ← סגירה', size: 40, color: '#3b2c24', gap: 16 }, { text: '~~~~~~~~~~~~', size: 30, color: '#9b8a70' }] }), []);
+  const book = useMemo(() => sign({ w: 512, h: 360, bg: '#efe6d2', pad: 26, lines: [{ text: 'יומן המרכזייה', size: 52, color: '#3b2c24', font: 'Rubik' }, { text: 'פתיחה ← ביקורת ← חידוש ← סגירה', size: 34, color: '#3b2c24', gap: 16 }, { text: '~~~~~~~~~~~~', size: 30, color: '#9b8a70' }] }), []);
   return (
     <>
       <color attach="background" args={['#0f0b0a']} />
       <fog attach="fog" args={['#0f0b0a', 8, 18]} />
       <RoomLights fill="#f0dcc6" ground="#2a1c18" amount={0.55} solved={solved} />
-      <RoomShell w={7} d={D} h={3.5} wall="#5a4a44" floor="#2c2422" ceil="#231c1a" pilaster="#8a6a52" cove="#ffd9ae" coveIntensity={1.7} panelCols={2} panelRows={2} seed={51} />
+      <RoomShell w={7} d={D} h={3.5} wall="#5a4a44" floor="#2c2422" ceil="#231c1a" pilaster="#8a6a52" cove="#ffd9ae" coveIntensity={0.95} panelCols={2} panelRows={2} seed={51} />
       {/* warm pendant lamps */}
       {[-1.2, 1.2].map((x) => (
         <group key={x} position={[x, 0, -1.2]}>
@@ -96,7 +107,7 @@ export function Scene() {
           <pointLight position={[0, 2.6, 0]} color="#ffc98a" intensity={7} distance={7} decay={1.5} />
         </group>
       ))}
-      <Interactable label="לוח החיבורים – לסדר את השיחה" standpoint="board" onActivate={() => (solved ? say('companion', 'השיחה כבר מחוברת.') : open('order'))}>
+      <Interactable label="לוח החיבורים: לשחזר את הסשן" standpoint="board" onActivate={() => (solved ? say('companion', 'הסשן כבר שוחזר.') : open('order'))}>
         <Switchboard solved={solved} />
       </Interactable>
       {/* operator desk with the logbook */}
@@ -112,7 +123,7 @@ export function Scene() {
           <torusGeometry args={[0.09, 0.012, 8, 20, Math.PI]} />
           <meshStandardMaterial color="#2b2b2b" />
         </mesh>
-        <Interactable label="יומן המרכזייה – לקרוא" standpoint="desk" onActivate={() => findClue('r5-log', R.lines.log)}>
+        <Interactable label="יומן המרכזייה: לקרוא" standpoint="desk" onActivate={() => findClue('r5-log', R.lines.log)}>
           <Box p={[-0.05, 0.775, 0.05]} s={[0.36, 0.03, 0.5]} c="#6b2f2a" r={0.7} />
           <Pl p={[-0.05, 0.792, 0.05]} rot={[-Math.PI / 2, 0, Math.PI / 2]} s={[0.46, 0.32]} map={book} r={0.8} />
         </Interactable>
@@ -122,7 +133,7 @@ export function Scene() {
         <Cyl p={[0, 0.9, 0]} a={[0.025, 0.04, 1.8, 10]} c="#4a3426" r={0.6} />
         <Box p={[0, 1.55, 0.1]} s={[0.35, 0.5, 0.1]} c="#5a3a4a" r={0.95} />
       </group>
-      <ExitDoor d={D} open={solved} accent="#c08a62" onActivate={() => (solved ? leaveRoom(5) : say('companion', 'הקו עדיין מנותק. קודם השיחה.'))} />
+      <ExitDoor d={D} open={solved} accent="#c08a62" onActivate={() => (solved ? leaveRoom(5) : say('companion', 'הקו עדיין מנותק. קודם משחזרים את הסשן.'))} />
       <Companion position={[-1.6, 0, -0.5]} facing={0.4} onActivate={replay} />
     </>
   );
@@ -152,7 +163,7 @@ function OrderOverlay() {
     setResult(res);
     if (res.every(Boolean)) {
       sfx.success();
-      setMsg({ kind: 'ok', text: 'השיחה מסודרת – מהפתיחה ועד הסגירה.' });
+      setMsg({ kind: 'ok', text: 'הסשן שוחזר, מהפתיחה, דרך הנפילה והחידוש, ועד הסגירה.' });
       setTimeout(() => {
         close();
         useGame.getState().solveRoom(5);

@@ -5,6 +5,7 @@ import { Onboarding } from './ui/Onboarding';
 import { Bubble } from './ui/Bubble';
 import { Fade, HoverLabel, TimeUp } from './ui/Panels';
 import { Admin } from './ui/Admin';
+import { SettingsPanel } from './ui/Settings';
 
 export default function App() {
   const screen = useGame((s) => s.screen);
@@ -34,6 +35,7 @@ export default function App() {
       <HoverLabel />
       <TimeUp />
       <Fade />
+      <SettingsPanel />
       <Admin />
     </>
   );
