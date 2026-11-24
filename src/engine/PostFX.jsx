@@ -2,7 +2,7 @@
 // a gentle vignette and a subtle colour grade. Uses only three.js' own passes – no extra packages.
 import { useEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useSettings, QUALITY } from '../game/settings';
+import { useQuality } from '../game/settings';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -122,6 +122,6 @@ function PostFXPipeline({ strength = 0.45, radius = 0.25, threshold = 1.0, vigne
 
 /** Drop inside any <Canvas>. Off on the "low" graphics setting (the plain renderer takes over). */
 export function PostFX(props) {
-  const q = QUALITY[useSettings((s) => s.quality)] || QUALITY.high;
+  const q = useQuality();
   return q.bloom ? <PostFXPipeline {...props} ao={q.ao && props.ao !== false} /> : null;
 }

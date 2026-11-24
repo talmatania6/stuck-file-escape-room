@@ -8,13 +8,13 @@ export const DEFAULT_SETTINGS = {
   invertY: false,
   fov: 72, // field of view, 60 – 90
   walkSpeed: 1, // 0.6 – 1.6
-  quality: 'high', // 'high' | 'medium' | 'low'
+  quality: 'high', // 'ultra' | 'high' | 'medium' | 'low'
   autoQuality: true, // step the graphics down automatically if this computer struggles
   narration: true, // Ping reads her lines aloud
 };
 
-const ORDER = ['high', 'medium', 'low'];
-/** One level down (high → medium → low). Used by auto-quality and after a lost GPU context. */
+const ORDER = ['ultra', 'high', 'medium', 'low'];
+/** One level down (ultra → high → medium → low). Used by auto-quality and after a lost GPU context. */
 export function stepDownQuality() {
   const s = useSettings.getState();
   const i = ORDER.indexOf(s.quality);
@@ -28,16 +28,32 @@ export const useSettings = create(
       update: (patch) => set(patch),
       reset: () => set({ ...DEFAULT_SETTINGS }),
     }),
-    { name: 'stuck-file-settings', version: 1 },
+    {
+      name: 'stuck-file-settings',
+      version: 3,
+      // older saves may hold 'auto' (a short-lived mode) or an unknown level
+      migrate: (old) => {
+        const s = { ...DEFAULT_SETTINGS, ...(old || {}) };
+        if (!ORDER.includes(s.quality)) s.quality = 'high';
+        delete s.autoLevel;
+        return s;
+      },
+    },
   ),
 );
 
 /** What each graphics level turns on. */
 export const QUALITY = {
-  high: { dpr: [1, 1.5], bloom: true, dust: true, ao: true, shadows: 2048, label: 'גבוהה' },
-  medium: { dpr: [1, 1.25], bloom: true, dust: true, shadows: 1024, label: 'רגילה' },
-  low: { dpr: [1, 1], bloom: false, dust: false, label: 'חסכונית' },
+  ultra: { dpr: [1, 1.5], bloom: true, dust: true, ao: true, shadows: 2048, label: 'מקסימלית' },
+  high: { dpr: [1, 1.25], bloom: true, dust: true, shadows: 1024, label: 'גבוהה' },
+  medium: { dpr: [1, 1], bloom: true, dust: true, label: 'רגילה' },
+  low: { dpr: [0.75, 0.75], bloom: false, dust: false, label: 'חסכונית' },
 };
+
+/** The graphics level in use. */
+export const effectiveQuality = (s) => (QUALITY[s.quality] ? s.quality : 'high');
+/** Hook: the active QUALITY preset. */
+export const useQuality = () => QUALITY[useSettings(effectiveQuality)] || QUALITY.high;
 
 /** Transient UI state: is the mouse locked to the view, and is the settings panel open. */
 export const usePointer = create((set) => ({

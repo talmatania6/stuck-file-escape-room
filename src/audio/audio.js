@@ -94,6 +94,20 @@ export function playBeeps(bits) {
 /* ---------- Sound effects ---------- */
 
 export const sfx = {
+  /** Cinematic transitions for the intro video. */
+  whoosh() {
+    const c = getCtx();
+    noise({ start: c.currentTime, dur: 0.7, vol: 0.13, from: 300, to: 3800, q: 0.8 });
+    tone({ freq: 140, type: 'sine', start: c.currentTime, dur: 0.5, vol: 0.06, freqEnd: 60, attack: 0.05, release: 0.3 });
+  },
+  impact() {
+    const c = getCtx();
+    const t = c.currentTime;
+    tone({ freq: 90, type: 'sine', start: t, dur: 1.8, vol: 0.35, freqEnd: 32, attack: 0.005, release: 1.4 });
+    noise({ start: t, dur: 0.9, vol: 0.16, from: 2400, to: 200, q: 0.6 });
+    tone({ freq: 660, type: 'triangle', start: t + 0.02, dur: 1.6, vol: 0.05, attack: 0.01, release: 1.4 });
+    tone({ freq: 990, type: 'sine', start: t + 0.02, dur: 1.8, vol: 0.035, attack: 0.01, release: 1.6 });
+  },
   click() {
     const c = getCtx();
     tone({ freq: 1700, type: 'square', start: c.currentTime, dur: 0.035, vol: 0.06 });

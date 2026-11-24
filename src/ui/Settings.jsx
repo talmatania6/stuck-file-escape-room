@@ -128,7 +128,7 @@ export function SettingsPanel() {
               onChange={(v) => st.update({ quality: v, autoQuality: false })}
               options={Object.entries(QUALITY).map(([value, q]) => ({ value, label: q.label }))}
             />
-            <p className="set-note">אם המשחק איטי במחשב, כדאי לבחור ״חסכונית״: בלי זוהר ובלי חלקיקים, ברזולוציה נמוכה יותר.</p>
+            <p className="set-note">אם המשחק איטי, כדאי לבחור ״רגילה״ או ״חסכונית״. ״מקסימלית״ מוסיפה צללי מגע, ומתאימה רק למחשב חזק.</p>
           </div>
           <div className="set-row">
             <span className="set-label">התאמה אוטומטית</span>

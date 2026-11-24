@@ -7,7 +7,7 @@ import { roomByNumber } from '../game/rooms';
 import { ROOM_MODULES } from '../rooms';
 import { getCtx, setMuted, sfx, startMusic } from '../audio/audio';
 import { LookControls, fpsEvents } from '../engine/LookControls';
-import { useSettings, QUALITY } from '../game/settings';
+import { useQuality } from '../game/settings';
 import { ViewHint, SettingsButton } from '../ui/Settings';
 import { PostFX } from '../engine/PostFX';
 import { SceneEnvironment } from '../engine/Environment';
@@ -26,7 +26,7 @@ function wakeAudio() {
 }
 
 const GL = { antialias: true, powerPreference: 'high-performance' };
-const useDpr = () => QUALITY[useSettings((s) => s.quality)]?.dpr || [1, 1.5];
+const useDpr = () => useQuality().dpr || [1, 1.25];
 
 /* ------------------------------------------------------------------ */
 

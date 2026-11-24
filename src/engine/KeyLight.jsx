@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useSettings, QUALITY } from '../game/settings';
+import { useSettings, QUALITY, effectiveQuality } from '../game/settings';
 
 const box = new THREE.Box3();
 
@@ -45,11 +45,15 @@ function shaftMaterial(color) {
       uniform vec3 uColor; uniform float uStrength; uniform float uTime;
       varying float vH; varying vec3 vN; varying vec3 vV; varying vec3 vW;
       void main() {
-        float edge = pow(abs(dot(normalize(vN), normalize(vV))), 1.6);   // soft sides
-        float fall = mix(0.22, 1.0, pow(vH, 1.4));                         // brightest at the fixture
-        float floorFade = smoothstep(0.0, 0.08, vH);                       // no hard line on the floor
+        // every input is clamped: a single NaN here gets smeared over the whole screen by the bloom
+        float h = clamp(vH, 0.0, 1.0);
+        vec3 n = vN / max(length(vN), 1e-4);
+        vec3 v = vV / max(length(vV), 1e-4);
+        float edge = pow(clamp(abs(dot(n, v)), 0.0, 1.0), 1.6);            // soft sides
+        float fall = mix(0.22, 1.0, pow(h, 1.4));                          // brightest at the fixture
+        float floorFade = smoothstep(0.0, 0.08, h);                         // no hard line on the floor
         float drift = 0.85 + 0.15 * sin(vW.y * 3.0 + vW.x * 2.0 - uTime * 0.4);
-        float a = edge * fall * floorFade * drift * uStrength;
+        float a = clamp(edge * fall * floorFade * drift * uStrength, 0.0, 1.0);
         gl_FragColor = vec4(uColor * a, a);
       }`,
     transparent: true,
@@ -78,7 +82,7 @@ export function KeyLight({
   shaft = true,
   shaftColor,
 }) {
-  const quality = useSettings((s) => s.quality);
+  const quality = useSettings(effectiveQuality);
   const q = QUALITY[quality] || QUALITY.high;
   const mapSize = q.shadows || 0;
   const { scene, gl } = useThree();
@@ -111,6 +115,9 @@ export function KeyLight({
   useEffect(() => {
     gl.shadowMap.enabled = true;
     gl.shadowMap.type = THREE.PCFSoftShadowMap;
+    // the rooms are almost static: re-render the shadow map a few times a second, not every frame
+    gl.shadowMap.autoUpdate = false;
+    gl.shadowMap.needsUpdate = true;
     // materials compiled before shadows were on need a recompile
     scene.traverse((o) => { if (o.isMesh && o.material) [].concat(o.material).forEach((m) => (m.needsUpdate = true)); });
   }, [gl, scene]);
@@ -131,8 +138,14 @@ export function KeyLight({
     }
   }, [mapSize]);
 
-  useFrame(({ clock }, dt) => {
+  const shadowTick = useRef(0);
+  useFrame(({ clock, gl: r }, dt) => {
     shaftMat.uniforms.uTime.value = clock.elapsedTime;
+    shadowTick.current -= dt;
+    if (shadowTick.current <= 0) {
+      r.shadowMap.needsUpdate = true;
+      shadowTick.current = clock.elapsedTime < 4 ? 0 : 0.2;
+    }
     // rooms build their props over the first seconds (and swap some later), so re-tag now and then
     since.current -= dt;
     if (since.current <= 0) {

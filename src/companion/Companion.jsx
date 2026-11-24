@@ -266,6 +266,8 @@ const holoFragment = /* glsl */ `
  * position / facing / onActivate.
  */
 export function Companion({ position, facing = 0, onActivate, label = `${COMPANION_NAME}: לשמוע שוב` }) {
+  // ?noping hides her (used when rendering stills for the intro video)
+  if (typeof window !== 'undefined' && window.location.search.includes('noping')) return null;
   const [views, setViews] = useState(null);
   const plane = useRef();
   const head = useMemo(() => new THREE.Vector3(), []);

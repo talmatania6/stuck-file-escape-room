@@ -4,7 +4,7 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useSettings, QUALITY } from '../game/settings';
+import { useQuality } from '../game/settings';
 
 const still = (() => {
   try {
@@ -96,6 +96,6 @@ function DustField({ w = 7, d = 7, h = 3.5, radius, minRadius = 0, count = 260, 
 
 /** Off on the "low" graphics setting. */
 export function Dust(props) {
-  const on = QUALITY[useSettings((s) => s.quality)]?.dust ?? true;
+  const on = useQuality().dust ?? true;
   return on ? <DustField {...props} /> : null;
 }

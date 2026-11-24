@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useGame } from './game/store';
 import { HubScreen, RoomScreen, StartScreen, VictoryScreen } from './screens/Screens';
-import { Onboarding } from './ui/Onboarding';
+import { IntroVideo } from './ui/IntroVideo';
 import { Bubble } from './ui/Bubble';
 import { Fade, HoverLabel, TimeUp } from './ui/Panels';
 import { Admin } from './ui/Admin';
@@ -35,7 +35,7 @@ export default function App() {
   return (
     <AppBoundary>
       {screen === 'start' && <StartScreen />}
-      {screen === 'onboarding' && <Onboarding />}
+      {screen === 'onboarding' && <IntroVideo />}
       {screen === 'hub' && <HubScreen />}
       {screen === 'room' && <RoomScreen />}
       {screen === 'victory' && <VictoryScreen />}
