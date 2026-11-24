@@ -501,10 +501,8 @@ export function HubScene({ celebrate = false }) {
       speak(HUB_TEXT.locked(next));
       return;
     }
-    if (st === 'done') {
-      speak(HUB_TEXT.done);
-      return;
-    }
+    // finished rooms can be visited again (to re-read a clue, e.g. the staff card the twist needs)
+    if (st === 'done') speak(HUB_TEXT.done);
     busy.current = true;
     setStandpoint(`door${n}`);
     setTimeout(() => {

@@ -6,6 +6,11 @@ import { Bubble } from './ui/Bubble';
 import { Fade, HoverLabel, TimeUp } from './ui/Panels';
 import { Admin } from './ui/Admin';
 import { SettingsPanel } from './ui/Settings';
+import { AppBoundary } from './engine/SafeCanvas';
+import { Toast } from './ui/Toast';
+import { HintPanel } from './ui/Hint';
+import { ResetConfirm } from './ui/ResetConfirm';
+import { stopVoice } from './audio/voice';
 
 export default function App() {
   const screen = useGame((s) => s.screen);
@@ -24,8 +29,11 @@ export default function App() {
     document.body.classList.toggle('reduce-motion', calm);
   }, [calm]);
 
+  // never let a line keep talking over a different screen
+  useEffect(() => { stopVoice(); }, [screen]);
+
   return (
-    <>
+    <AppBoundary>
       {screen === 'start' && <StartScreen />}
       {screen === 'onboarding' && <Onboarding />}
       {screen === 'hub' && <HubScreen />}
@@ -37,6 +45,9 @@ export default function App() {
       <Fade />
       <SettingsPanel />
       <Admin />
-    </>
+      <HintPanel />
+      <ResetConfirm />
+      <Toast />
+    </AppBoundary>
   );
 }

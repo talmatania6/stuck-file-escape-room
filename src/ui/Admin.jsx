@@ -114,7 +114,7 @@ function Panel() {
         </div>
       </section>
       <section className="admin-foot">
-        <button type="button" className="btn warn small" onClick={() => { if (window.confirm('למחוק את כל ההתקדמות ולהתחיל מחדש?')) { g.newGame(); close(); } }}>איפוס משחק</button>
+        <button type="button" className="btn warn small" onClick={() => { close(); useUI.getState().setResetOpen(true); }}>איפוס משחק</button>
         <button type="button" className="link-btn" onClick={() => { try { sessionStorage.removeItem(SESSION_KEY); } catch { /* ignore */ } close(); }}>יציאה ממצב מנהל</button>
       </section>
     </div>

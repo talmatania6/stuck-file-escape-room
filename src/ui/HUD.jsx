@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { HintButton } from './Hint';
 import { useGame, useUI, remainingMs, formatTime, leaveRoom } from '../game/store';
 import { layerLabel } from '../game/rooms';
 import { setMuted, setTension } from '../audio/audio';
@@ -98,7 +99,6 @@ export function HUD({ room }) {
       <div className="hud-where">
         <span className="hud-kicker">{inRoom ? (room.n === 8 ? 'חדר הבקרה' : `${layerLabel(room.n)} · ${room.en}`) : 'אולם הליבה'}</span>
         <strong>{inRoom ? (room.n === 8 ? 'הצעד האחרון' : room.he) : next ? `הדלת הבאה: ${layerLabel(next)}` : 'כל השכבות תקינות'}</strong>
-        <span className="hud-goal">{inRoom ? room.objective : next ? 'מוצאים את הדלת המוארת ונכנסים' : 'שולחים את הקובץ מעמדת הליבה'}</span>
       </div>
       <FileProgress />
       <div className="hud-actions">
@@ -109,12 +109,13 @@ export function HUD({ room }) {
             <span>לדלת הפעילה</span>
           </button>
         )}
-        {inRoom && room.n !== 8 && (
+        {inRoom && (
           <button type="button" className="hud-btn quiet" onClick={() => leaveRoom(room.n)} title="חזרה לאולם הליבה (ההתקדמות נשמרת)">
             <IconDoor />
             <span>לאולם</span>
           </button>
         )}
+        <HintButton />
         <button type="button" className="hud-btn help" onClick={() => setHelp(true)}>
           <IconHelp />
           <span>נתקענו?</span>

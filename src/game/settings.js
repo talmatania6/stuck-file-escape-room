@@ -9,7 +9,17 @@ export const DEFAULT_SETTINGS = {
   fov: 72, // field of view, 60 – 90
   walkSpeed: 1, // 0.6 – 1.6
   quality: 'high', // 'high' | 'medium' | 'low'
+  autoQuality: true, // step the graphics down automatically if this computer struggles
+  narration: true, // Ping reads her lines aloud
 };
+
+const ORDER = ['high', 'medium', 'low'];
+/** One level down (high → medium → low). Used by auto-quality and after a lost GPU context. */
+export function stepDownQuality() {
+  const s = useSettings.getState();
+  const i = ORDER.indexOf(s.quality);
+  if (i >= 0 && i < ORDER.length - 1) s.update({ quality: ORDER[i + 1] });
+}
 
 export const useSettings = create(
   persist(

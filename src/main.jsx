@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './styles.css';
 import { useGame, useUI } from './game/store';
+import { installGlobalErrorLogging } from './game/log';
+
+installGlobalErrorLogging();
 
 // Dev-only handles for testing (not included in the production build's behaviour).
 if (import.meta.env.DEV) Object.assign(window, { __game: useGame, __ui: useUI });

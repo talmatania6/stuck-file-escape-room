@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame, useUI } from '../game/store';
 import { COMPANION_NAME } from '../game/rooms';
 import { companionPortrait } from '../companion/companionSheet';
@@ -14,12 +14,50 @@ const STEPS = [
   { icon: <IconBulb />, title: 'נתקעתם?', text: `שאלות ל${COMPANION_NAME}, שמלווה אתכם, הן בחינם. רמז מגליץ׳ עולה 2 דקות.` },
 ];
 
-/** How to play – shown before the clock starts. */
+const INTRO_SRC = `${import.meta.env.BASE_URL}intro/ping-intro.mp4`;
+const INTRO_POSTER = `${import.meta.env.BASE_URL}intro/ping-intro-poster.jpg`;
+
+/** Ping's intro video – plays right after the team name (the click that got here lets it play with sound). */
+function IntroVideo({ onDone }) {
+  const video = useRef();
+  const muted = useGame((s) => s.muted);
+  const [needsTap, setNeedsTap] = useState(false);
+  useEffect(() => {
+    const v = video.current;
+    if (!v) return;
+    v.muted = muted;
+    v.play().catch(() => {
+      // the browser blocked sound: try muted, and offer a tap to hear it
+      v.muted = true;
+      v.play().then(() => setNeedsTap(true)).catch(() => setNeedsTap(true));
+    });
+    const onKey = (e) => { if (e.key === 'Escape') onDone(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <div className="intro-video" role="dialog" aria-label={`סרטון פתיחה – ${COMPANION_NAME} מציגה את המשימה`}>
+      <video ref={video} src={INTRO_SRC} poster={INTRO_POSTER} playsInline preload="auto" onEnded={onDone} onError={onDone} />
+      {needsTap && (
+        <button type="button" className="intro-sound" onClick={() => { const v = video.current; v.muted = false; v.currentTime = 0; v.play(); setNeedsTap(false); }}>
+          להפעלת הסרטון עם קול
+        </button>
+      )}
+      <button type="button" className="intro-skip" onClick={onDone}>דילוג ›</button>
+    </div>
+  );
+}
+
+/** Before the clock starts: Ping's intro video, then a short launch panel (how-to-play is one click away). */
 export function Onboarding() {
   const start = useGame((s) => s.startMission);
   const team = useGame((s) => s.team);
   const [face, setFace] = useState(null);
+  const [phase, setPhase] = useState('video'); // video | ready
+  const [howTo, setHowTo] = useState(false);
   useEffect(() => { companionPortrait().then(setFace); }, []);
+  if (phase === 'video') return <IntroVideo onDone={() => setPhase('ready')} />;
   return (
     <div className="onboarding">
       <div className="ob-card">
@@ -27,11 +65,15 @@ export function Onboarding() {
           {face && <img className="ob-face" src={face} alt="" />}
           <div>
             <span className="kicker">קבוצת {team}</span>
-            <h1>יש לנו בעיה.</h1>
-            <p className="lead">הקובץ של נועה נתקע בדרך למרצה. יש לכם <b>30 דקות</b> לעבור את <b>שבע השכבות</b> של הרשת, לתקן מה שגליץ׳ שיבש, ולשלוח אותו לפני חצות.</p>
+            <h1>מוכנים?</h1>
+            <p className="lead">30 דקות, שבע שכבות, קובץ אחד לשחרר. {COMPANION_NAME} מחכה לכם באולם הליבה.</p>
           </div>
         </div>
-        <ol className="ob-steps">
+        <div className="ob-links">
+          <button type="button" className="link-btn" aria-expanded={howTo} onClick={() => setHowTo(!howTo)}>{howTo ? 'להסתיר' : 'איך משחקים? (תקציר)'}</button>
+          <button type="button" className="link-btn" onClick={() => setPhase('video')}>לצפות שוב בסרטון</button>
+        </div>
+        {howTo && <ol className="ob-steps">
           {STEPS.map((s, i) => (
             <li key={i}>
               <span className="ob-icon">{s.icon}</span>
@@ -39,7 +81,7 @@ export function Onboarding() {
               <span>{s.text}</span>
             </li>
           ))}
-        </ol>
+        </ol>}
         <div className="ob-start">
           <span className="ob-clock"><IconClock /> השעון יתחיל רק כשתלחצו</span>
           <button type="button" className="btn big" onClick={() => { useUI.getState().setStandpoint('center'); start(); }}>יוצאים לדרך</button>

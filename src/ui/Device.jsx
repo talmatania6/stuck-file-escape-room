@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useUI } from '../game/store';
 import { sfx } from '../audio/audio';
 import { IconClose } from './Icons';
+import { HintButton } from './Hint';
 
 /**
  * Close-up frame for a puzzle device. It slides in over the room (the room stays
@@ -23,6 +24,7 @@ export function Device({ title, subtitle, tone = 'steel', wide, children, onClos
             <strong>{title}</strong>
             {subtitle && <small>{subtitle}</small>}
           </div>
+          <HintButton compact />
           <button type="button" className="icon-btn" onClick={done} aria-label="סגירה: חזרה לחדר">
             <IconClose />
           </button>

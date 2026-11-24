@@ -1,5 +1,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
+import { SafeCanvas } from '../engine/SafeCanvas';
+import { logError } from '../game/log';
 import { useGame, useUI, leaveRoom } from '../game/store';
 import { roomByNumber } from '../game/rooms';
 import { ROOM_MODULES } from '../rooms';
@@ -38,44 +40,37 @@ export function StartScreen() {
   const [team, setTeam] = useState('');
   return (
     <div className="start-screen">
-      <Canvas className="bg-canvas" camera={{ fov: 55, position: [2, 1.5, 2] }} dpr={[1, 1.5]} gl={GL}>
+      <SafeCanvas label="start" className="bg-canvas" camera={{ fov: 55, position: [2, 1.5, 2] }} dpr={[1, 1.5]} gl={GL}>
         <NoaScene />
         <PostFX strength={0.4} radius={0.3} threshold={1.15} vignette={0.2} />
-      </Canvas>
+      </SafeCanvas>
       <SettingsButton className="icon-btn start-settings" />
-      <div className="start-panel">
+      <div className="start-shade" aria-hidden="true" />
+      <img className="start-ping" src={`${import.meta.env.BASE_URL}assets/ping/ping-front.webp`} alt="" aria-hidden="true" />
+      <main className="start-hero">
         <span className="kicker">חדר בריחה · שבע השכבות של הרשת</span>
         <h1>הקובץ התקוע</h1>
-        <p className="lead">נועה צריכה להגיש עבודה עד חצות. הקובץ נתקע באמצע הדרך, ומישהו בתוך המערכת לא ממש עוזר.</p>
-        <div className="start-stats">
-          <div className="big-timer" aria-label="30 דקות למשימה">
-            <span className="bt-label">הזמן שלכם</span>
-            <span className="bt-digits" dir="ltr">
-              <span className="bt-ghost" aria-hidden="true">88:88</span>
-              <span className="bt-live">30<i>:</i>00</span>
-            </span>
-          </div>
-          <div className="layers-chip"><b>7</b><span>שכבות לתקן</span></div>
+        <p className="start-tag">הקובץ של נועה נתקע בדרך למרצה. יש לכם חצי שעה לשחרר אותו.</p>
+        <div className="start-meta" aria-label="30 דקות, 7 שכבות">
+          <span className="led-compact" dir="ltr" aria-hidden="true"><span className="bt-ghost">88:88</span><span className="bt-live">30<i>:</i>00</span></span>
+          <span className="meta-sep" aria-hidden="true" />
+          <span className="meta-item"><b>7</b> שכבות לתקן</span>
         </div>
         {saved ? (
-          <div className="resume">
+          <div className="start-card">
             <p className="resume-hi">היי <b>{savedTeam}</b>, רוצים להמשיך מאיפה שעצרתם?</p>
-            <div className="row">
-              <button type="button" className="btn" onClick={() => { wakeAudio(); setScreen(useGame.getState().finishedAt ? 'victory' : resumeScreen.current); }}>להמשיך</button>
-              <button type="button" className="btn ghost" onClick={newGame}>להתחיל מחדש</button>
-            </div>
+            <button type="button" className="btn big start-go" onClick={() => { wakeAudio(); setScreen(useGame.getState().finishedAt ? 'victory' : resumeScreen.current); }}>להמשיך</button>
+            <button type="button" className="link-btn" onClick={() => useUI.getState().setResetOpen(true)}>להתחיל מחדש</button>
           </div>
         ) : (
-          <form className="team-form" onSubmit={(e) => { e.preventDefault(); wakeAudio(); sfx.click(); begin(team); }}>
+          <form className="start-card" onSubmit={(e) => { e.preventDefault(); wakeAudio(); sfx.click(); begin(team); }}>
             <label htmlFor="team">שם הקבוצה</label>
-            <div className="row">
-              <input id="team" value={team} onChange={(e) => setTeam(e.target.value)} placeholder="למשל: הנתבים העליזים" maxLength={40} autoComplete="off" />
-              <button type="submit" className="btn">הבא</button>
-            </div>
-            <p className="fine">לפני שמתחילים, הסבר קצר איך משחקים. השעון עוד לא רץ.</p>
+            <input id="team" value={team} onChange={(e) => setTeam(e.target.value)} placeholder="למשל: הנתבים העליזים" maxLength={40} autoComplete="off" />
+            <button type="submit" className="btn big start-go">מתחילים</button>
+            <p className="fine">השעון יתחיל רק אחרי סרטון הפתיחה.</p>
           </form>
         )}
-      </div>
+      </main>
     </div>
   );
 }
@@ -90,13 +85,13 @@ export function HubScreen() {
   }, []);
   return (
     <div className="room-screen">
-      <Canvas className="game-canvas" camera={{ fov: 72, near: 0.05, far: 80 }} dpr={dpr} gl={GL} events={fpsEvents}>
+      <SafeCanvas label="hub" className="game-canvas" camera={{ fov: 72, near: 0.05, far: 80 }} dpr={dpr} gl={GL} events={fpsEvents}>
         <Suspense fallback={null}>
           <HubScene />
         </Suspense>
         <LookControls standpoints={HUB_STANDPOINTS} bounds={{ radius: 5.4 }} />
         <PostFX />
-      </Canvas>
+      </SafeCanvas>
       <HUD />
       <ViewHint />
       <HelpPanel />
@@ -106,6 +101,15 @@ export function HubScreen() {
 }
 
 /* ------------------------------------------------------------------ */
+
+/** A saved game pointing at a room that doesn't exist – log it and send the team to the hub instead of a blank screen. */
+function InvalidRoom({ n }) {
+  useEffect(() => {
+    logError('room screen', `no room module for currentRoom=${n} – returning to the hub`);
+    useGame.getState().backToHub();
+  }, [n]);
+  return null;
+}
 
 export function RoomScreen() {
   const dpr = useDpr();
@@ -139,18 +143,18 @@ export function RoomScreen() {
     }
   }, [solved, n]);
 
-  if (!mod) return null;
+  if (!mod) return <InvalidRoom n={n} />;
   const { Scene, Overlays } = mod;
   return (
     <div className={`room-screen room-${n}`}>
-      <Canvas key={n} className="game-canvas" camera={{ fov: 72, near: 0.05, far: 80 }} dpr={dpr} gl={GL} events={fpsEvents}>
+      <SafeCanvas key={n} label={`room ${n}`} className="game-canvas" camera={{ fov: 72, near: 0.05, far: 80 }} dpr={dpr} gl={GL} events={fpsEvents}>
         <Suspense fallback={null}>
           <Scene />
         </Suspense>
         <SceneEnvironment file={mod.env?.file || 'lab.exr'} intensity={mod.env?.intensity ?? 0.22} />
         <LookControls standpoints={mod.standpoints} bounds={mod.bounds} />
         <PostFX />
-      </Canvas>
+      </SafeCanvas>
       <HUD room={room} />
       <ViewHint />
       <RoomTitle key={`title-${n}`} room={room} />
@@ -225,13 +229,13 @@ function OrbitCam() {
 export function VictoryScreen() {
   return (
     <div className="victory-screen">
-      <Canvas className="bg-canvas" camera={{ fov: 70, position: [0, 1.5, 3] }} dpr={[1, 1.5]} gl={GL}>
+      <SafeCanvas label="victory" className="bg-canvas" camera={{ fov: 70, position: [0, 1.5, 3] }} dpr={[1, 1.5]} gl={GL}>
         <Suspense fallback={null}>
           <HubScene celebrate />
         </Suspense>
         <OrbitCam />
         <PostFX strength={0.6} radius={0.35} vignette={0.2} />
-      </Canvas>
+      </SafeCanvas>
       <Victory />
     </div>
   );

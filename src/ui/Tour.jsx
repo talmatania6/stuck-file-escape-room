@@ -63,7 +63,7 @@ export function RoomTour() {
   const tutorialDone = useGame((s) => s.tutorialDone);
   const done = useGame((s) => s.tourDone);
   const finish = useGame((s) => s.finishTour);
-  const busy = useUI((s) => Boolean(s.overlay) || s.successOpen || s.helpOpen || s.journalOpen || s.fading);
+  const busy = useUI((s) => Boolean(s.overlay) || s.successOpen || s.helpOpen || s.journalOpen || s.fading || s.hintOpen);
   const [i, setI] = useState(0);
   const [ready, setReady] = useState(false);
   useEffect(() => {
@@ -90,7 +90,7 @@ export function JournalTip() {
   const count = useGame((s) => s.journal.length);
   const done = useGame((s) => s.journalTipDone);
   const finish = useGame((s) => s.finishJournalTip);
-  const busy = useUI((s) => Boolean(s.overlay) || s.successOpen || s.helpOpen || s.fading);
+  const busy = useUI((s) => Boolean(s.overlay) || s.successOpen || s.helpOpen || s.fading || s.hintOpen);
   const journalOpen = useUI((s) => s.journalOpen);
   const tourRunning = useGame((s) => s.currentRoom === 1 && s.tutorialDone && !s.tourDone);
   useEffect(() => {

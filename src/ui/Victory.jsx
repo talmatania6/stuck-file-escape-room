@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useGame, elapsedMs, formatTime } from '../game/store';
+import { useGame, elapsedMs, formatTime, resetGame } from '../game/store';
 import { ROOMS, layerLabel } from '../game/rooms';
 import { sfx } from '../audio/audio';
 
@@ -152,7 +152,7 @@ export function Victory() {
         </div>
         <div className="row v-actions">
           <button type="button" className="btn" onClick={download}>הורדת דף סיכום</button>
-          <button type="button" className="btn ghost" onClick={() => game.newGame()}>משחק חוזר</button>
+          <button type="button" className="btn ghost" onClick={() => resetGame()}>משחק חוזר</button>
         </div>
         <p className="fine">דף הסיכום נפתח בדפדפן, ומשם אפשר להדפיס או לשמור כ-PDF.</p>
       </div>

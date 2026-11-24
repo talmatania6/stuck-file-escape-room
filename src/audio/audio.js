@@ -266,3 +266,10 @@ export function setTension(level) {
   music.level = level;
   if (music.started) applyLevel();
 }
+
+
+/** Lower the music while Ping is speaking. */
+export function duckMusic(on) {
+  if (!ctx || !musicBus) return;
+  musicBus.gain.setTargetAtTime(on ? 0.22 : 0.55, ctx.currentTime, on ? 0.12 : 0.5);
+}

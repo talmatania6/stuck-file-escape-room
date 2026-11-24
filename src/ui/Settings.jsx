@@ -125,10 +125,14 @@ export function SettingsPanel() {
             <Segmented
               label="איכות גרפיקה"
               value={st.quality}
-              onChange={(v) => st.update({ quality: v })}
+              onChange={(v) => st.update({ quality: v, autoQuality: false })}
               options={Object.entries(QUALITY).map(([value, q]) => ({ value, label: q.label }))}
             />
             <p className="set-note">אם המשחק איטי במחשב, כדאי לבחור ״חסכונית״: בלי זוהר ובלי חלקיקים, ברזולוציה נמוכה יותר.</p>
+          </div>
+          <div className="set-row">
+            <span className="set-label">התאמה אוטומטית</span>
+            <Toggle label="התאמת איכות אוטומטית" checked={st.autoQuality} onChange={(on) => st.update({ autoQuality: on })} />
           </div>
         </section>
 
@@ -139,10 +143,24 @@ export function SettingsPanel() {
             <Toggle label="סאונד" checked={!muted} onChange={(on) => { useGame.getState().setMuted(!on); setMuted(!on); }} />
           </div>
           <div className="set-row">
+            <span className="set-label">קריינות של פינג</span>
+            <Toggle label="קריינות" checked={st.narration !== false} onChange={(on) => st.update({ narration: on })} />
+          </div>
+          <div className="set-row">
             <span className="set-label">הפחתת תנועה ואנימציות</span>
             <Toggle label="הפחתת תנועה" checked={calm} onChange={(v) => useGame.getState().setReduceMotion(v)} />
           </div>
         </section>
+
+        {useGame.getState().startedAt && (
+          <section className="set-group">
+            <h3>המשחק</h3>
+            <div className="set-row">
+              <span className="set-label">להתחיל את כל המשחק מההתחלה</span>
+              <button type="button" className="btn warn small" onClick={() => { close(); useUI.getState().setResetOpen(true); }}>התחלה מחדש</button>
+            </div>
+          </section>
+        )}
 
         <div className="device-actions">
           <button type="button" className="btn" onClick={close}>סיום</button>
@@ -154,6 +172,7 @@ export function SettingsPanel() {
 }
 
 /** Crosshair while the mouse is locked; a gentle hint when FPS mode is on but the mouse is free. */
+let everLocked = false;
 export function ViewHint() {
   const locked = usePointer((s) => s.locked);
   const mode = useSettings((s) => s.controlMode);
@@ -161,7 +180,8 @@ export function ViewHint() {
   const settings = usePointer((s) => s.settingsOpen);
   const hovered = useUI((s) => s.hovered);
   if (mode !== 'mouse') return null;
+  if (locked) everLocked = true; // after the first time, the "click to look" tip has done its job
   if (locked) return <div className={`crosshair ${hovered ? 'on' : ''}`} aria-hidden="true" />;
-  if (busy || settings) return null;
+  if (busy || settings || everLocked) return null;
   return <div className="lock-hint" role="status">לחצו על המסך כדי להסתכל עם העכבר · <kbd>Esc</kbd> משחרר</div>;
 }

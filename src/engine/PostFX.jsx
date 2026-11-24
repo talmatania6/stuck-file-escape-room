@@ -73,8 +73,8 @@ function PostFXPipeline({ strength = 0.45, radius = 0.25, threshold = 1.0, vigne
     if (ao) {
       // contact shadows where objects meet walls/floors – the real-time stand-in for baked light
       const gtao = new GTAOPass(scene, camera, 512, 512);
-      gtao.updateGtaoMaterial({ radius: 0.45, distanceExponent: 1.6, thickness: 1.2, scale: 1.0, samples: 12 });
-      gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
+      gtao.updateGtaoMaterial({ radius: 0.45, distanceExponent: 1.6, thickness: 1.2, scale: 1.0, samples: 8 });
+      gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 5, rings: 2, samples: 8 });
       gtao.blendIntensity = 0.85;
       composer.addPass(gtao);
     }

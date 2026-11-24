@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGame, useUI, formatTime, remainingMs, elapsedMs } from '../game/store';
 import { COMPANION_NAME, GENERIC_HELP, GLITCH_NO_MORE, JOURNAL, ROOMS, roomByNumber, layerLabel } from '../game/rooms';
 import { sfx } from '../audio/audio';
+import { playVoice, stopVoice } from '../audio/voice';
 import { companionPortrait } from '../companion/companionSheet';
 import { IconBulb, IconClose, IconFile } from './Icons';
 import { usePointer } from '../game/settings';
@@ -190,8 +191,12 @@ export function SuccessCard({ roomN, onBack }) {
   const solved = useGame((s) => s.solved);
   const room = roomByNumber(roomN);
   useEffect(() => {
-    if (open) sfx.fragment();
-  }, [open]);
+    if (!open) return undefined;
+    sfx.fragment();
+    // Ping reads "what we learned" once the success chime has played
+    const t = setTimeout(() => playVoice(room.learn), 900);
+    return () => { clearTimeout(t); stopVoice(); };
+  }, [open, room.learn]);
   if (!open || roomN === 8) return null;
   return (
     <div className="success" role="dialog" aria-label="השכבה תוקנה">

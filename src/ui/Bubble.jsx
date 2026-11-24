@@ -3,10 +3,14 @@ import { useGame, useUI } from '../game/store';
 import { COMPANION_NAME } from '../game/rooms';
 import { companionPortrait } from '../companion/companionSheet';
 import { companionAnchor } from '../companion/Companion';
-import { IconChevron, IconClose } from './Icons';
+import { IconChevron, IconClose, IconSound, IconMute } from './Icons';
+import { playVoice, stopVoice, voiceDuration } from '../audio/voice';
+import { useSettings } from '../game/settings';
 
 const NAMES = { companion: COMPANION_NAME, glitch: 'גליץ׳' };
 const readTime = (text) => Math.max(3800, text.length * 62);
+/** How long a line stays up: the reading time, or – if Ping reads it aloud – until she finishes. */
+const lineTime = (text) => Math.max(readTime(text), voiceDuration(text) * 1000 + 700);
 
 /**
  * Speech bubbles. While the companion is on screen the bubble sits next to her
@@ -31,14 +35,24 @@ export function Bubble() {
     companionPortrait().then(setFace);
   }, []);
 
+  const narration = useSettings((s) => s.narration !== false);
+
   // auto-advance: nobody has to click through a speech
   useEffect(() => {
     if (!bubble || collapsed || spotlight) return; // paused while the tour is pointing at something
     const line = bubble.lines[bubble.i];
     const last = bubble.i === bubble.lines.length - 1;
-    const t = setTimeout(last ? collapse : next, last ? readTime(line.text) + 3500 : readTime(line.text));
+    const t = setTimeout(last ? collapse : next, last ? lineTime(line.text) + 3500 : lineTime(line.text));
     return () => clearTimeout(t);
-  }, [bubble, collapsed, collapse, next, spotlight]);
+  }, [bubble, collapsed, collapse, next, spotlight, narration]);
+
+  // Ping reads the line that's on screen (one clip at a time; stops when the bubble closes)
+  useEffect(() => {
+    if (!bubble || collapsed || spotlight) { stopVoice(); return; }
+    playVoice(bubble.lines[bubble.i].text);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bubble?.key, bubble?.i, collapsed, spotlight, narration]);
+  useEffect(() => () => stopVoice(), []);
 
   // follow the companion on screen
   useLayoutEffect(() => {
@@ -115,11 +129,21 @@ export function Bubble() {
         </p>
         {more && (
           <div className="bubble-progress" aria-hidden="true">
-            <span style={{ animationDuration: `${readTime(line.text)}ms` }} />
+            <span style={{ animationDuration: `${lineTime(line.text)}ms` }} />
           </div>
         )}
       </div>
       <div className="bubble-actions">
+        <button
+          type="button"
+          className="icon-btn small voice-toggle"
+          aria-pressed={narration}
+          aria-label={narration ? 'לכבות את הקריינות' : 'להפעיל את הקריינות'}
+          title={narration ? 'קריינות פועלת – ללחוץ לכיבוי' : 'קריינות כבויה – ללחוץ להפעלה'}
+          onClick={() => useSettings.getState().update({ narration: !narration })}
+        >
+          {narration ? <IconSound /> : <IconMute />}
+        </button>
         {more ? (
           <button type="button" className="bubble-next" onClick={next} aria-label="למשפט הבא">
             <IconChevron />

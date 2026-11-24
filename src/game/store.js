@@ -148,6 +148,21 @@ export function leaveRoom(n) {
   }, 650);
 }
 
+/**
+ * Restart the whole game: progress, room states, journal, hints, timer and every bit of
+ * on-screen state go back to how they were before the first click, and the team lands
+ * on the opening screen. (Settings like sound/graphics and the local leaderboard stay.)
+ */
+export function resetGame() {
+  try { document.exitPointerLock?.(); } catch { /* not locked */ }
+  useUI.setState({
+    hovered: null, standpoint: 'center', lookTarget: null, overlay: null, helpOpen: false, journalOpen: false,
+    journalPing: 0, successOpen: false, fading: false, tutorialStep: 0, bubble: null, bubbleCollapsed: false,
+    lastLines: null, hintOpen: false, resetOpen: false, spotlight: false,
+  });
+  useGame.getState().newGame();
+}
+
 /** Record a found clue in the journal and point the team at it. */
 export function findClue(id, line) {
   const g = useGame.getState();
@@ -202,6 +217,12 @@ export const useUI = create((set, get) => ({
   setFading: (fading) => set({ fading }),
   tutorialStep: 0, // room-1 coach marks: 0 drag, 1 click, 2 done
   setTutorialStep: (tutorialStep) => set({ tutorialStep }),
+  hintOpen: false,
+  setHintOpen: (hintOpen) => set({ hintOpen }),
+  resetOpen: false,
+  setResetOpen: (resetOpen) => set({ resetOpen }),
+  toastMsg: null,
+  toast: (text) => set({ toastMsg: { text, key: Date.now() } }),
   adminOpen: false,
   setAdminOpen: (adminOpen) => set({ adminOpen }),
 
