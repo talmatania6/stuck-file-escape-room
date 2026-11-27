@@ -1,7 +1,7 @@
 // Opening scene: Noa at her desk late at night, the upload failing, a torn cable sparking.
-// The camera circles the whole room slowly (360°). Noa is lit mostly from the screen,
-// so she reads as a figure rather than a detailed model.
-import { useMemo, useRef } from 'react';
+// The camera holds one shot from her side and only drifts a little. Noa is lit mostly from the screen,
+// the desk lamp and the window.
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Box, Cyl } from '../engine/kit';
@@ -137,84 +137,121 @@ function Sparks({ position }) {
   );
 }
 
-/** Noa: seated, elbows on the desk, hands in her hair. */
+/* Noa in her gaming chair: six photo views cut from her character sheet, standing in for a
+ * 3D model. A card turns toward the camera, and as the camera circles the room the views
+ * cross-fade into each other (front → 3/4 → profile → back …), so she turns with the room
+ * instead of snapping. Each view is pinned at its own centre of mass, so the chair stays on
+ * the same spot on the floor whichever view is showing. */
+const NOA_VIEWS = [
+  ['FRONT', 'front', 0],
+  ['RIGHT_34', 'right34', 45],
+  ['RIGHT_PROFILE', 'rightprofile', 90],
+  ['BACK', 'back', 180],
+  ['LEFT_PROFILE', 'leftprofile', -90],
+  ['LEFT_34', 'left34', -45],
+];
+const NOA_POS = new THREE.Vector3(0.3, 0, 0.14);
+const NOA_FACING = Math.PI; // she faces the desk (-z)
+const M_PER_PX = 1.18 / 600; // the front view (600px tall, chair back included) ≈ 1.18 m
+
+/** Camera angle around Noa in degrees: 0 = in front of her face, +90 = her right side. */
+function noaAngle(cam) {
+  const vx = cam.x - NOA_POS.x, vz = cam.z - NOA_POS.z;
+  const fx = Math.sin(NOA_FACING), fz = Math.cos(NOA_FACING);
+  const rx = -Math.cos(NOA_FACING), rz = Math.sin(NOA_FACING);
+  return (Math.atan2(vx * rx + vz * rz, vx * fx + vz * fz) * 180) / Math.PI;
+}
+
+/** The two neighbouring views around this angle and how far we are from the first to the second. */
+const RING = [...NOA_VIEWS].sort((p, q) => p[2] - q[2]); // -90, -45, 0, 45, 90, 180
+function blendViews(deg) {
+  for (let i = 0; i < RING.length; i++) {
+    const a = RING[i], b = RING[(i + 1) % RING.length];
+    const from = a[2], to = b[2] <= from ? b[2] + 360 : b[2];
+    const d = deg < from ? deg + 360 : deg;
+    if (d >= from && d < to) {
+      const t = (d - from) / (to - from);
+      // hold each view for most of its range, fade only around the midpoint
+      const w = THREE.MathUtils.smoothstep(t, 0.3, 0.7);
+      return [a[0], b[0], w];
+    }
+  }
+  return [RING[0][0], RING[1][0], 0];
+}
+
+/** Alpha-weighted centre of a cut-out, as a fraction of its width. */
+function massCentre(img) {
+  const w = 64, h = Math.round((64 * img.height) / img.width);
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const g = c.getContext('2d');
+  g.drawImage(img, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data;
+  let sum = 0, sx = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const al = d[(y * w + x) * 4 + 3];
+    sum += al;
+    sx += al * (x + 0.5);
+  }
+  return sum ? sx / sum / w : 0.5;
+}
+
 function Noa() {
-  const head = useRef();
-  const body = useRef();
-  const hoodie = '#2a3346';
-  const skin = '#a9826b';
-  const hair = '#1d1714';
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
-    if (body.current) body.current.rotation.x = -0.32 + Math.sin(t * 1.1) * 0.015; // breathing, slumped forward
-    if (head.current) head.current.rotation.y = Math.sin(t * 0.5) * 0.12 * (Math.sin(t * 0.13) > 0.6 ? 1 : 0.2); // the occasional "why?!" shake
+  const group = useRef();
+  const cards = [useRef(), useRef()];
+  const [views, setViews] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    const loader = new THREE.TextureLoader();
+    Promise.all(
+      NOA_VIEWS.map(([k, f]) =>
+        loader.loadAsync(`${import.meta.env.BASE_URL}assets/noa/noa-${f}.webp`).then((t) => {
+          t.colorSpace = THREE.SRGBColorSpace;
+          t.anisotropy = 4;
+          const w = t.image.width * M_PER_PX, h = t.image.height * M_PER_PX;
+          return [k, { tex: t, w, h, shift: (0.5 - massCentre(t.image)) * w }];
+        }),
+      ),
+    )
+      .then((list) => alive && setViews(Object.fromEntries(list)))
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  useEffect(() => () => views && Object.values(views).forEach((v) => v.tex.dispose()), [views]);
+  useFrame(({ camera }) => {
+    if (!views || !group.current) return;
+    group.current.rotation.y = Math.atan2(camera.position.x - NOA_POS.x, camera.position.z - NOA_POS.z);
+    const [a, b, w] = blendViews(noaAngle(camera.position));
+    [[a, 1 - w], [b, w]].forEach(([key, op], i) => {
+      const m = cards[i].current;
+      if (!m) return;
+      const v = views[key];
+      if (m.material.map !== v.tex) {
+        m.material.map = v.tex;
+        m.material.emissiveMap = v.tex;
+        m.material.needsUpdate = true;
+      }
+      m.scale.set(v.w, v.h, 1);
+      m.position.set(v.shift, v.h / 2, i * 0.002);
+      m.material.opacity = op;
+      m.visible = op > 0.01;
+    });
   });
+  if (!views) return null;
   return (
-    <group position={[0.3, 0, 0.42]}>
-      {/* chair */}
-      <Cyl p={[0, 0.25, 0]} a={[0.03, 0.03, 0.45, 8]} c="#222" m={0.7} r={0.4} />
-      <Box p={[0, 0.48, 0]} s={[0.48, 0.07, 0.46]} c="#1c1f24" r={0.7} />
-      <Box p={[0, 0.85, 0.22]} s={[0.46, 0.62, 0.06]} rot={[-0.12, 0, 0]} c="#1c1f24" r={0.7} />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <Box key={i} p={[Math.cos((i / 5) * Math.PI * 2) * 0.22, 0.04, Math.sin((i / 5) * Math.PI * 2) * 0.22]} s={[0.26, 0.03, 0.04]} rot={[0, -(i / 5) * Math.PI * 2, 0]} c="#222" m={0.6} r={0.4} />
-      ))}
-      {/* legs */}
-      {[-0.1, 0.1].map((x) => (
-        <group key={x}>
-          <mesh position={[x, 0.55, -0.18]} rotation={[Math.PI / 2, 0, 0]}>
-            <capsuleGeometry args={[0.07, 0.32, 6, 12]} />
-            <meshStandardMaterial color="#1f2533" roughness={0.9} />
-          </mesh>
-          <mesh position={[x, 0.3, -0.36]}>
-            <capsuleGeometry args={[0.06, 0.4, 6, 12]} />
-            <meshStandardMaterial color="#1f2533" roughness={0.9} />
-          </mesh>
-          <Box p={[x, 0.05, -0.42]} s={[0.1, 0.07, 0.2]} c="#d9d9d9" r={0.6} />
-        </group>
-      ))}
-      {/* torso leaning toward the desk */}
-      <group ref={body} position={[0, 0.56, 0.05]} rotation={[-0.32, 0, 0]}>
-        <mesh position={[0, 0.3, 0]}>
-          <capsuleGeometry args={[0.17, 0.32, 8, 16]} />
-          <meshStandardMaterial color={hoodie} roughness={0.95} />
+    <group ref={group} position={NOA_POS}>
+      {cards.map((r, i) => (
+        <mesh key={i} ref={r} renderOrder={10 + i}>
+          <planeGeometry args={[1, 1]} />
+          <meshStandardMaterial transparent depthWrite={false} alphaTest={0.02} roughness={0.85} emissive="#ffffff" emissiveIntensity={0.4} />
         </mesh>
-        {/* hood */}
-        <mesh position={[0, 0.55, 0.1]}>
-          <sphereGeometry args={[0.15, 16, 12]} />
-          <meshStandardMaterial color={hoodie} roughness={0.95} />
-        </mesh>
-        <group ref={head} position={[0, 0.72, -0.04]}>
-          <mesh>
-            <sphereGeometry args={[0.115, 20, 16]} />
-            <meshStandardMaterial color={skin} roughness={0.7} />
-          </mesh>
-          <mesh position={[0, 0.03, 0.02]} scale={[1.08, 1.0, 1.1]}>
-            <sphereGeometry args={[0.12, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.62]} />
-            <meshStandardMaterial color={hair} roughness={0.8} />
-          </mesh>
-          <mesh position={[0, 0.06, 0.13]}>
-            <sphereGeometry args={[0.065, 14, 12]} />
-            <meshStandardMaterial color={hair} roughness={0.8} />
-          </mesh>
-        </group>
-        {/* arms: elbows forward, hands in the hair */}
-        {[-1, 1].map((s) => (
-          <group key={s}>
-            <mesh position={[s * 0.2, 0.42, -0.12]} rotation={[0.9, 0, s * 0.25]}>
-              <capsuleGeometry args={[0.055, 0.26, 6, 12]} />
-              <meshStandardMaterial color={hoodie} roughness={0.95} />
-            </mesh>
-            <mesh position={[s * 0.16, 0.66, -0.16]} rotation={[-0.5, 0, -s * 0.45]}>
-              <capsuleGeometry args={[0.05, 0.22, 6, 12]} />
-              <meshStandardMaterial color={hoodie} roughness={0.95} />
-            </mesh>
-            <mesh position={[s * 0.1, 0.8, -0.08]}>
-              <sphereGeometry args={[0.05, 12, 10]} />
-              <meshStandardMaterial color={skin} roughness={0.7} />
-            </mesh>
-          </group>
-        ))}
-      </group>
+      ))}
+      {/* soft contact shadow on the floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]}>
+        <circleGeometry args={[0.3, 32]} />
+        <meshBasicMaterial color="#000" transparent opacity={0.3} depthWrite={false} />
+      </mesh>
     </group>
   );
 }
@@ -253,12 +290,20 @@ function Cables() {
   );
 }
 
-function OrbitCam() {
+/* One fixed shot from Noa's right, a little behind her: her profile, the desk and the failing
+ * upload on the screen. The camera only drifts a few degrees (a flat cut-out cannot survive a
+ * full spin), and the aim sits to the right of the scene so she stays clear of the start panel. */
+const SHOT = { deg: 104, sway: 5, dist: 2.45, y: 1.32, aim: new THREE.Vector3(0.1, 0.8, -0.95) };
+function DriftCam() {
   const calm = useGame((s) => s.reduceMotion);
   useFrame(({ camera, clock }) => {
-    const t = clock.elapsedTime * (calm ? 0 : 0.07) + 0.6;
-    camera.position.set(0.3 + Math.sin(t) * 2.7, 1.45 + Math.sin(t * 0.7) * 0.15, -0.1 + Math.cos(t) * 2.7);
-    camera.lookAt(0.35, 0.85, -0.25);
+    const t = calm ? 0 : clock.elapsedTime;
+    const deg = SHOT.deg + Math.sin(t * 0.11) * SHOT.sway;
+    const r = (deg * Math.PI) / 180;
+    const d = SHOT.dist + Math.sin(t * 0.07) * 0.08;
+    // deg is measured around Noa: 0 = in front of her face (-z), +90 = her right side (+x)
+    camera.position.set(NOA_POS.x + Math.sin(r) * d, SHOT.y + Math.sin(t * 0.09) * 0.04, NOA_POS.z - Math.cos(r) * d);
+    camera.lookAt(SHOT.aim);
   });
   return null;
 }
@@ -341,7 +386,7 @@ export function NoaScene() {
       <Cables />
       <Sparks position={[1.33, 0.05, -0.5]} />
       <Noa />
-      <OrbitCam />
+      <DriftCam />
     </>
   );
 }
