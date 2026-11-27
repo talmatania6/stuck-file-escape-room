@@ -22,27 +22,27 @@ function screenTexture() {
   g.fillRect(70, 60, 884, 50);
   g.fillStyle = '#9aa7b3';
   for (let i = 0; i < 7; i++) g.fillRect(110, 150 + i * 46, 300 + ((i * 97) % 380), 14);
-  // error dialog
-  g.fillStyle = 'rgba(0,0,0,0.35)';
+  // error dialog – large, so it reads from across the room
+  g.fillStyle = 'rgba(0,0,0,0.45)';
   g.fillRect(70, 60, 884, 520);
   g.fillStyle = '#ffffff';
-  g.fillRect(230, 190, 564, 270);
+  g.fillRect(100, 110, 824, 430);
   g.fillStyle = '#d64545';
-  g.fillRect(230, 190, 564, 64);
+  g.fillRect(100, 110, 824, 116);
   g.direction = 'rtl';
   g.textAlign = 'center';
   g.fillStyle = '#ffffff';
-  g.font = '700 38px Heebo, sans-serif';
-  g.fillText('השליחה נכשלה', 512, 236);
+  g.font = '800 76px Heebo, sans-serif';
+  g.fillText('השליחה נכשלה', 512, 194);
   g.fillStyle = '#1b2430';
-  g.font = '500 32px Heebo, sans-serif';
-  g.fillText('עבודה_סופית.pdf לא נשלח.', 512, 310);
-  g.fillText('בדקו את החיבור ונסו שוב.', 512, 356);
+  g.font = '600 50px Heebo, sans-serif';
+  g.fillText('עבודה_סופית.pdf לא נשלח.', 512, 300);
+  g.fillText('בדקו את החיבור ונסו שוב.', 512, 370);
   g.fillStyle = '#3a7bd5';
-  g.fillRect(432, 390, 160, 46);
+  g.fillRect(382, 418, 260, 84);
   g.fillStyle = '#fff';
-  g.font = '700 28px Heebo, sans-serif';
-  g.fillText('נסו שוב', 512, 422);
+  g.font = '700 46px Heebo, sans-serif';
+  g.fillText('נסו שוב', 512, 476);
   // clock in the corner
   g.textAlign = 'left';
   g.direction = 'ltr';
@@ -150,9 +150,9 @@ const NOA_VIEWS = [
   ['LEFT_PROFILE', 'leftprofile', -90],
   ['LEFT_34', 'left34', -45],
 ];
-const NOA_POS = new THREE.Vector3(0.3, 0, 0.14);
+const NOA_POS = new THREE.Vector3(0.3, 0, 0.36);
 const NOA_FACING = Math.PI; // she faces the desk (-z)
-const M_PER_PX = 1.18 / 600; // the front view (600px tall, chair back included) ≈ 1.18 m
+const M_PER_PX = 1.4 / 600; // the front view (600px tall, chair back included) ≈ 1.4 m, so she sits at desk height
 
 /** Camera angle around Noa in degrees: 0 = in front of her face, +90 = her right side. */
 function noaAngle(cam) {
@@ -293,7 +293,7 @@ function Cables() {
 /* One fixed shot from Noa's right, a little behind her: her profile, the desk and the failing
  * upload on the screen. The camera only drifts a few degrees (a flat cut-out cannot survive a
  * full spin), and the aim sits to the right of the scene so she stays clear of the start panel. */
-const SHOT = { deg: 104, sway: 5, dist: 2.45, y: 1.32, aim: new THREE.Vector3(0.1, 0.8, -0.95) };
+const SHOT = { deg: 114, sway: 3, dist: 2.45, y: 1.32, aim: new THREE.Vector3(0.1, 0.8, -0.95) };
 function DriftCam() {
   const calm = useGame((s) => s.reduceMotion);
   useFrame(({ camera, clock }) => {
@@ -356,7 +356,7 @@ export function NoaScene() {
         <Box p={[0, 0.74, 0]} s={[1.5, 0.05, 0.75]} map={t.desk} r={0.55} />
         {[-0.7, 0.7].map((x) => <Box key={x} p={[x, 0.36, 0]} s={[0.05, 0.72, 0.7]} c="#d9d5cc" r={0.5} />)}
         {/* monitor */}
-        <group position={[0, 1.08, -0.2]}>
+        <group position={[0, 1.1, -0.2]}>
           <Box s={[0.82, 0.5, 0.04]} c="#121418" m={0.5} r={0.35} />
           <mesh position={[0, 0, 0.021]}><planeGeometry args={[0.78, 0.46]} /><meshBasicMaterial map={t.screen} toneMapped={false} /></mesh>
           <Box p={[0, -0.32, -0.02]} s={[0.06, 0.18, 0.04]} c="#121418" />

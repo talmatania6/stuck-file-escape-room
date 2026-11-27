@@ -292,7 +292,11 @@ const holoFragment = /* glsl */ `
     rgb += coral * 0.05 * (1.0 - h);                                          // projector light from below
 
     float a = c.a * uOpacity * (0.97 + 0.03 * sin(uTime * 23.0 + h * 3.0) * (1.0 - step(0.98, uOpacity)));
-    gl_FragColor = vec4(rgb * a, a);
+    // convert to the screen's colour space when drawing straight to the screen (no post-processing,
+    // e.g. the "low" graphics level) – without this she came out dark and muddy
+    gl_FragColor = vec4(rgb, a);
+    #include <colorspace_fragment>
+    gl_FragColor.rgb *= a;
   }
 `;
 

@@ -45,7 +45,14 @@ centres = np.array([c for _, c in VIEWS])
 # column near the midpoint between their labels, so each shoe stays with its own figure
 st_all = strict[:Y1].copy()
 mids = (centres[:-1] + centres[1:]) / 2
-for m in mids.astype(int):
+# right profile's shoe tip sits just under right 3/4's chair leg, so no column separates them:
+# split that pair along a short horizontal line between the leg tip and the toe instead
+SPLIT_ROW = {4: (546, 549, 1645, 1712)}  # pair index → rows y0..y1, columns x0..x1
+for k, m in enumerate(mids.astype(int)):
+    if k in SPLIT_ROW:
+        y0, y1, x0, x1 = SPLIT_ROW[k]
+        st_all[y0:y1, x0:x1] = False
+        continue
     lo, hi = m - 70, m + 70
     counts = st_all[:, lo:hi].sum(axis=0)
     cut = lo + int(np.argmin(counts))
@@ -61,7 +68,7 @@ for i, (sz, (cy, cxm)) in enumerate(zip(sizes, cents), start=1):
     if sz >= 40:
         owner[i] = int(np.argmin(np.abs(centres - cxm)))
 
-ERASE = {'left34': [(274, 532, 304, 556)], 'right34': [(0, 512, 46, 600)]}  # boxes in crop pixels
+ERASE = {'left34': [(274, 532, 304, 556)]}  # boxes in crop pixels
 
 for v, (name, _) in enumerate(VIEWS):
     keep = owner[lab] == v
