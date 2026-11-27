@@ -44,10 +44,10 @@ export const useSettings = create(
 
 /** What each graphics level turns on. */
 export const QUALITY = {
-  ultra: { dpr: [1, 1.5], bloom: true, dust: true, ao: true, shadows: 2048, label: 'מקסימלית' },
-  high: { dpr: [1, 1.25], bloom: true, dust: true, shadows: 1024, label: 'גבוהה' },
-  medium: { dpr: [1, 1], bloom: true, dust: true, label: 'רגילה' },
-  low: { dpr: [0.75, 0.75], bloom: false, dust: false, label: 'חסכונית' },
+  ultra: { dpr: [1, 1.5], bloom: true, dust: true, ao: true, shadows: 2048, msaa: 4, label: 'מקסימלית' },
+  high: { dpr: [1, 1.25], bloom: true, dust: true, shadows: 1024, msaa: 4, label: 'גבוהה' },
+  medium: { dpr: [1, 1], bloom: true, dust: true, msaa: 2, label: 'רגילה' },
+  low: { dpr: [0.7, 0.7], bloom: false, dust: false, label: 'חסכונית' },
 };
 
 /** The graphics level in use. */

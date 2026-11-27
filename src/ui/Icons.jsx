@@ -17,3 +17,4 @@ export const IconSearch = () => (<svg {...base}><circle cx="11" cy="11" r="6" />
 export const IconKeyboard = () => (<svg {...base}><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" /></svg>);
 export const IconClock = () => (<svg {...base}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>);
 export const IconFile = () => (<svg {...base}><path d="M7 3h7l5 5v13H7z" /><path d="M14 3v5h5" /></svg>);
+export const IconRestart = () => (<svg {...base}><path d="M4 4v5h5" /><path d="M5.2 15a7.5 7.5 0 1 0 1.3-8.3L4 9" /></svg>);

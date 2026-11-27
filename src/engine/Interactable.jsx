@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import { useUI } from '../game/store';
 import { drag } from './LookControls';
+import { useKeyAction } from './KeyAction';
 
 const HIGHLIGHT = '#3FD0E0';
 const REACH = 4.2; // metres – how close you must be to use an object in FPS mode
@@ -55,6 +56,23 @@ export function Interactable({ label, onActivate, standpoint, enabled = true, ch
   useEffect(() => () => { if (ref.current) hoverOutline.objects = hoverOutline.objects.filter((o) => !isInside(o, ref.current)); }, []);
 
   useEffect(() => () => setHovered(null), [setHovered]);
+  useEffect(() => () => { const k = useKeyAction.getState(); if (k.hover?.label === label) k.setHover(null); }, [label]);
+
+  const lastDistance = useRef(0);
+  /** Click or E/Enter: the same action. */
+  const activate = (distance) => {
+    if (!enabled) return;
+    if (document.pointerLockElement) {
+      // FPS mode: the player walks on their own – never pull the camera; just need to be close enough
+      if (distance > REACH) {
+        setHovered(`${label} · קרבו כדי להפעיל`);
+        return;
+      }
+    } else if (standpoint) setStandpoint(standpoint);
+    const ui = useUI.getState();
+    if (ui.tutorialStep === 1) ui.setTutorialStep(2);
+    onActivate?.();
+  };
 
   return (
     <group
@@ -65,27 +83,23 @@ export function Interactable({ label, onActivate, standpoint, enabled = true, ch
         if (!enabled) return;
         setHover(true);
         setHovered(label);
+        lastDistance.current = e.distance;
+        useKeyAction.getState().setHover({ label, run: () => activate(lastDistance.current) });
         gl.domElement.style.cursor = 'pointer';
       }}
+      onPointerMove={(e) => { lastDistance.current = e.distance; }}
       onPointerOut={(e) => {
         e.stopPropagation();
         setHover(false);
         setHovered(null);
+        const k = useKeyAction.getState();
+        if (k.hover?.label === label) k.setHover(null);
         gl.domElement.style.cursor = 'grab';
       }}
       onClick={(e) => {
         e.stopPropagation();
         if (!enabled || drag.moved) return;
-        if (document.pointerLockElement) {
-          // FPS mode: the player walks on their own – never pull the camera; just need to be close enough
-          if (e.distance > REACH) {
-            setHovered(`${label} · קרבו כדי להפעיל`);
-            return;
-          }
-        } else if (standpoint) setStandpoint(standpoint);
-        const ui = useUI.getState();
-        if (ui.tutorialStep === 1) ui.setTutorialStep(2);
-        onActivate?.();
+        activate(e.distance);
       }}
     >
       {children}

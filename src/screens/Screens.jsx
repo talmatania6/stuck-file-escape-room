@@ -15,6 +15,7 @@ import { HubScene, HUB_STANDPOINTS } from '../hub/HubScene';
 import { HUD } from '../ui/HUD';
 import { HelpPanel, Journal, SuccessCard } from '../ui/Panels';
 import { Tutorial } from '../ui/Onboarding';
+import { KeyActionPrompt } from '../engine/KeyAction';
 import { JournalTip, RoomTour } from '../ui/Tour';
 import { Victory } from '../ui/Victory';
 import { NoaScene } from './NoaScene';
@@ -101,6 +102,7 @@ export function HubScreen() {
       </SafeCanvas>
       <HUD />
       <ViewHint />
+      <KeyActionPrompt />
       <HelpPanel />
       <Journal />
     </div>
@@ -164,6 +166,7 @@ export function RoomScreen() {
       </SafeCanvas>
       <HUD room={room} />
       <ViewHint />
+      <KeyActionPrompt />
       <RoomTitle key={`title-${n}`} room={room} />
       <StandpointNav standpoints={mod.standpoints} />
       {n === 1 && <Tutorial />}

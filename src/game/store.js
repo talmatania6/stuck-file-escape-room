@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { directiveTexts, RETRY_LINE } from './directive';
 
 export const GAME_MS = 30 * 60 * 1000;
 export const HINT_PENALTY_MS = 2 * 60 * 1000;
@@ -158,7 +159,7 @@ export function resetGame() {
   useUI.setState({
     hovered: null, standpoint: 'center', lookTarget: null, overlay: null, helpOpen: false, journalOpen: false,
     journalPing: 0, successOpen: false, fading: false, tutorialStep: 0, bubble: null, bubbleCollapsed: false,
-    lastLines: null, hintOpen: false, resetOpen: false, spotlight: false,
+    lastLines: null, hintOpen: false, resetOpen: false, spotlight: false, roomHints: {}, hintNew: false,
   });
   useGame.getState().newGame();
 }
@@ -218,7 +219,15 @@ export const useUI = create((set, get) => ({
   tutorialStep: 0, // room-1 coach marks: 0 drag, 1 click, 2 done
   setTutorialStep: (tutorialStep) => set({ tutorialStep }),
   hintOpen: false,
-  setHintOpen: (hintOpen) => set({ hintOpen }),
+  setHintOpen: (hintOpen) => set(hintOpen ? { hintOpen, hintNew: false } : { hintOpen }),
+  /** Ping's "what to do" lines per room, collected as they come up; shown only in the hint panel. */
+  roomHints: {},
+  hintNew: false,
+  addRoomHint: (n, text) => set((s) => {
+    const cur = s.roomHints[n] || [];
+    if (cur.includes(text)) return s;
+    return { roomHints: { ...s.roomHints, [n]: [...cur, text] }, hintNew: !s.hintOpen };
+  }),
   resetOpen: false,
   setResetOpen: (resetOpen) => set({ resetOpen }),
   toastMsg: null,
@@ -231,7 +240,21 @@ export const useUI = create((set, get) => ({
   bubbleCollapsed: false,
   lastLines: null,
   speak(lines, { replace = true } = {}) {
-    const list = (Array.isArray(lines) ? lines : [lines]).map((l) => (typeof l === 'string' ? { who: 'companion', text: l } : l));
+    let list = (Array.isArray(lines) ? lines : [lines]).map((l) => (typeof l === 'string' ? { who: 'companion', text: l } : l));
+    // lines that tell the team what to do wait in the "רמז" panel instead of being said
+    const g = useGame.getState();
+    if (g.screen === 'room' && g.currentRoom) {
+      const dir = directiveTexts(g.currentRoom);
+      const kept = [];
+      for (const l of list) {
+        const d = l.who === 'companion' && dir.get(String(l.text).trim());
+        if (!d) { kept.push(l); continue; }
+        get().addRoomHint(g.currentRoom, l.text);
+        if (d.retry) kept.push({ who: 'companion', text: RETRY_LINE });
+      }
+      list = kept;
+      if (!list.length) return;
+    }
     const cur = get().bubble;
     if (!replace && cur) {
       set({ bubble: { ...cur, lines: [...cur.lines, ...list] }, bubbleCollapsed: false, lastLines: [...cur.lines, ...list] });

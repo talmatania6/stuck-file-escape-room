@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useGame, useUI } from '../game/store';
 import { HUB_TEXT } from '../game/rooms';
 import { Interactable } from '../engine/Interactable';
+import { useKeyAction } from '../engine/KeyAction';
 import { Box, Cyl, Pl } from '../engine/kit';
 import { panels, metal, tiles } from '../engine/textures';
 import { Companion } from '../companion/Companion';
@@ -448,6 +449,41 @@ function Core({ solved, onActivate, celebrate }) {
 
 /* ------------------------------------------------------------------ */
 
+/**
+ * Keyboard play: walking up to a door (and looking roughly at it) offers "E · להיכנס".
+ * E / Enter then does exactly what clicking the door does.
+ */
+function DoorReach({ solved, onDoor }) {
+  const t = useRef(0);
+  const dir = useMemo(() => new THREE.Vector3(), []);
+  const click = useRef(onDoor);
+  click.current = onDoor;
+  useEffect(() => () => useKeyAction.getState().setNear(null), []);
+  useFrame(({ camera }, dt) => {
+    t.current += dt;
+    if (t.current < 0.12) return;
+    t.current = 0;
+    camera.getWorldDirection(dir);
+    let best = null;
+    for (const l of LAYERS) {
+      const [x, , z] = doorPos(l.n);
+      const dx = x - camera.position.x, dz = z - camera.position.z;
+      const d = Math.hypot(dx, dz);
+      if (d > 3.6) continue;
+      const facing = (dx * dir.x + dz * dir.z) / (d * Math.hypot(dir.x, dir.z) || 1);
+      if (facing < 0.72) continue; // within about 45° of the view
+      if (!best || d < best.d) best = { n: l.n, en: l.en, d };
+    }
+    const k = useKeyAction.getState();
+    if (!best) { if (k.near) k.setNear(null); return; }
+    const st = doorState(best.n, solved);
+    const code = `LAYER ${String(best.n).padStart(2, '0')}`;
+    const label = st === 'locked' ? `${code} · נעולה` : `להיכנס · ${code} · ${best.en}`;
+    if (k.near?.label !== label) k.setNear({ label, run: () => click.current(best.n) });
+  });
+  return null;
+}
+
 export function HubScene({ celebrate = false }) {
   const solved = useGame((s) => s.solved);
   useGame((s) => s.adminFree); // re-render doors when the admin opens them all
@@ -549,6 +585,7 @@ export function HubScene({ celebrate = false }) {
         />
       ))}
       {!celebrate && <Companion position={[-1.35, 0, -3.3]} facing={0.35} onActivate={() => useUI.getState().replayBubble()} />}
+      {!celebrate && <DoorReach solved={solved} onDoor={clickDoor} />}
     </>
   );
 }

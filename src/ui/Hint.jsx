@@ -15,6 +15,8 @@ export function HintPanel() {
   const inRoom = game.screen === 'room';
   const room = inRoom ? roomByNumber(game.currentRoom) : null;
   const steps = (inRoom ? GUIDES[game.currentRoom] : GUIDES.hub) || [];
+  const roomHints = useUI((s) => s.roomHints);
+  const pingHints = (inRoom && roomHints[game.currentRoom]) || [];
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => e.key === 'Escape' && setOpen(false);
@@ -45,6 +47,12 @@ export function HintPanel() {
           );
         })}
       </ol>
+      {inRoom && pingHints.length > 0 && (
+        <div className="hint-ping">
+          <span className="hint-ping-title">כיוון מפינג</span>
+          {pingHints.map((t) => <p key={t}>{t}</p>)}
+        </div>
+      )}
       {inRoom && (
         <button type="button" className="link-btn hint-more" onClick={() => { setOpen(false); useUI.getState().setHelpOpen(true); }}>
           עדיין תקועים? שאלה לפינג (חינם) או רמז מגליץ׳ (2 דק׳)
@@ -58,8 +66,9 @@ export function HintPanel() {
 export function HintButton({ compact }) {
   const open = useUI((s) => s.hintOpen);
   const setOpen = useUI((s) => s.setHintOpen);
+  const fresh = useUI((s) => s.hintNew);
   return (
-    <button type="button" className={`hud-btn hint-btn ${open ? 'on' : ''}`} aria-expanded={open} onClick={() => setOpen(!open)} title="רמז: מה עושים כאן">
+    <button type="button" className={`hud-btn hint-btn ${open ? 'on' : ''} ${fresh && !open ? 'has-new' : ''}`} aria-expanded={open} onClick={() => setOpen(!open)} title="רמז: מה עושים כאן">
       <IconBulb />
       {!compact && <span>רמז</span>}
     </button>

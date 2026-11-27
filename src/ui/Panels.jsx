@@ -6,6 +6,7 @@ import { playVoice, stopVoice } from '../audio/voice';
 import { companionPortrait } from '../companion/companionSheet';
 import { IconBulb, IconClose, IconFile } from './Icons';
 import { usePointer } from '../game/settings';
+import { logWarn } from '../game/log';
 
 /* ------------------------------------------------------------------ */
 /* "נתקענו?" – free clarifications from the companion + paid Glitch hints */
@@ -259,6 +260,17 @@ export function HoverLabel() {
 
 export function Fade() {
   const fading = useUI((s) => s.fading);
+  // safety net: a fade is a moment, never a state – if anything leaves it on, lift it
+  useEffect(() => {
+    if (!fading) return;
+    const t = setTimeout(() => {
+      if (useUI.getState().fading) {
+        logWarn('fade', 'black fade was still on after 4 s – lifted');
+        useUI.getState().setFading(false);
+      }
+    }, 4000);
+    return () => clearTimeout(t);
+  }, [fading]);
   return <div className={`fade ${fading ? 'on' : ''}`} aria-hidden="true" />;
 }
 

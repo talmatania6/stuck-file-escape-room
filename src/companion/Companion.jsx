@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { Interactable } from '../engine/Interactable';
 import { useGame, useUI } from '../game/store';
 import { COMPANION_NAME } from '../game/rooms';
+import { voiceDuration, voiceLevel, voicePlaying } from '../audio/voice';
 
 const HEIGHT = 1.72;
 const BASE_Y = 0.17;
@@ -157,6 +158,15 @@ const VIEWS = [
   { file: 'ping-rightprofile', deg: 90 },
   { file: 'ping-back', deg: 180 },
 ];
+// where her mouth is in each view (texture px: centre x, lip seam y, half width) – measured on the images
+const MOUTH = {
+  'ping-front': [333, 240.5, 26, 1],
+  'ping-left34': [405, 240.5, 24, 1],
+  'ping-right34': [403, 240.5, 24, 1],
+  'ping-leftprofile': [226, 241, 11, 1],
+  'ping-rightprofile': [420, 241, 11, 1],
+  'ping-back': [0, 0, 1, 0],
+};
 // the textures are 640×1800 with the figure 1740px tall, feet 10px above the bottom edge
 const TEX_H = 1800, FIG_H = 1740, FEET_PAD = 10, TEX_W = 640;
 const PLANE_H = HEIGHT * (TEX_H / FIG_H);
@@ -215,12 +225,37 @@ const holoFragment = /* glsl */ `
   uniform float uOpacity;
   uniform float uTalk;     // 0..1 while she's speaking
   uniform vec2 uTexel;
+  uniform vec4 uMouthA;    // mouth of view A in texture px: centre x, lip seam y, half width, has-mouth
+  uniform vec4 uMouthB;
+  uniform float uJaw;      // 0..1 how open her mouth is right now
   varying vec2 vUv;
 
   float rnd(float x) { return fract(sin(x * 91.7) * 43758.5453); }
+
+  // The jaw drops: everything below the lip seam slides down a few pixels (fading out by the chin)
+  // and the gap that opens between the lips is shaded dark. Works per view, in texture pixels.
+  vec2 jawWarp(vec2 uv, vec4 m, out float gap) {
+    gap = 0.0;
+    if (m.w < 0.5 || uJaw < 0.002) return uv;
+    vec2 p = vec2(uv.x * ${TEX_W.toFixed(1)}, (1.0 - uv.y) * ${TEX_H.toFixed(1)});
+    float open = uJaw * 6.0;
+    float dx = (p.x - m.x) / m.z;
+    float dy = p.y - m.y;
+    float wide = 1.0 - smoothstep(1.0, 2.4, abs(dx));
+    float below = smoothstep(-1.0, 1.5, dy) * (1.0 - smoothstep(22.0, 46.0, dy));
+    p.y -= open * below * wide;
+    float lens = open * max(0.0, 1.0 - dx * dx);
+    gap = step(0.0, dy) * (1.0 - smoothstep(lens * 0.7, lens + 0.01, dy)) * (1.0 - smoothstep(0.8, 1.0, abs(dx)));
+    return vec2(p.x / ${TEX_W.toFixed(1)}, 1.0 - p.y / ${TEX_H.toFixed(1)});
+  }
+
   vec4 view(vec2 uv) {
-    vec4 a = texture2D(uA, uv);
-    vec4 b = texture2D(uB, uv);
+    float ga, gb;
+    vec4 a = texture2D(uA, jawWarp(uv, uMouthA, ga));
+    vec4 b = texture2D(uB, jawWarp(uv, uMouthB, gb));
+    vec3 inner = vec3(0.025, 0.007, 0.009);   // linear colour: a deep dark red inside the mouth
+    a.rgb = mix(a.rgb, inner, ga * 0.92);
+    b.rgb = mix(b.rgb, inner, gb * 0.92);
     // premultiplied cross-fade so edges never go grey
     return mix(vec4(a.rgb * a.a, a.a), vec4(b.rgb * b.a, b.a), uMix);
   }
@@ -275,6 +310,9 @@ export function Companion({ position, facing = 0, onActivate, label = `${COMPANI
   const nod = useRef(0);
   const talk = useRef(0);
   const reveal = useRef(0);
+  const jaw = useRef(0);
+  const lineStart = useRef(0);
+  const lineDur = useRef(0);
 
   const material = useMemo(
     () =>
@@ -283,6 +321,7 @@ export function Companion({ position, facing = 0, onActivate, label = `${COMPANI
           uA: { value: null }, uB: { value: null }, uMix: { value: 0 },
           uTime: { value: 0 }, uReveal: { value: 0 }, uOpacity: { value: 0 },
           uNod: { value: 0 }, uTalk: { value: 0 }, uCalm: { value: 0 },
+          uMouthA: { value: new THREE.Vector4() }, uMouthB: { value: new THREE.Vector4() }, uJaw: { value: 0 },
           uTexel: { value: new THREE.Vector2(1 / TEX_W, 1 / TEX_H) },
         },
         vertexShader: holoVertex,
@@ -329,6 +368,8 @@ export function Companion({ position, facing = 0, onActivate, label = `${COMPANI
       const f = (deg - a.deg) / (b.deg - a.deg);
       u.uA.value = views[a.file];
       u.uB.value = views[b.file];
+      u.uMouthA.value.fromArray(MOUTH[a.file]);
+      u.uMouthB.value.fromArray(MOUTH[b.file]);
       u.uMix.value = THREE.MathUtils.smoothstep(f, 0.3, 0.7); // hold each view, blend only near the seam
     }
 
@@ -341,13 +382,31 @@ export function Companion({ position, facing = 0, onActivate, label = `${COMPANI
     const ui = useUI.getState();
     const b = ui.bubble;
     const key = b ? `${b.key}:${b.i}` : '';
-    if (key && key !== lastLine.current && !calm) nod.current = 1;
+    if (key && key !== lastLine.current) {
+      if (!calm) nod.current = 1;
+      lineStart.current = t;
+      const text = b.lines[b.i]?.text || '';
+      lineDur.current = voiceDuration(text) || Math.min(9, 0.4 + text.length * 0.062);
+    }
     lastLine.current = key;
     const speaking = Boolean(b && !ui.bubbleCollapsed && b.lines[b.i]?.who !== 'glitch');
     talk.current += ((speaking ? 1 : 0) - talk.current) * (1 - Math.exp(-dt * 4));
     nod.current = Math.max(0, nod.current - dt * 1.6);
     u.uNod.value = Math.sin(nod.current * Math.PI); // down and back up
     u.uTalk.value = talk.current * (0.6 + 0.4 * Math.sin(t * 7.0));
+
+    // her mouth: follows the recorded voice; without sound, a speaking rhythm for as long as the line lasts
+    let target = 0;
+    if (speaking && !calm) {
+      const lvl = voiceLevel();
+      if (lvl >= 0 && voicePlaying()) target = Math.min(1, Math.max(0, (lvl - 0.04) * 1.8));
+      else if (t - lineStart.current < lineDur.current) {
+        const syl = Math.max(0, Math.sin(t * 10.5) * 0.5 + Math.sin(t * 6.3 + 1.7) * 0.35 + 0.15);
+        target = Math.min(1, syl * (0.65 + 0.35 * Math.sin(t * 2.1)));
+      }
+    }
+    jaw.current += (target - jaw.current) * (1 - Math.exp(-dt * (target > jaw.current ? 28 : 16)));
+    u.uJaw.value = jaw.current;
 
     // project her head to screen space for the speech bubble
     head.set(position[0], BASE_Y + HEIGHT * 0.92, position[2]).project(camera);

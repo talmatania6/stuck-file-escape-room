@@ -4,7 +4,7 @@ import { useGame, useUI, remainingMs, formatTime, leaveRoom } from '../game/stor
 import { layerLabel } from '../game/rooms';
 import { setMuted, setTension } from '../audio/audio';
 import { doorPos } from '../hub/HubScene';
-import { IconBook, IconCompass, IconDoor, IconHelp, IconMute, IconSound } from './Icons';
+import { IconBook, IconCompass, IconDoor, IconHelp, IconMute, IconRestart, IconSound } from './Icons';
 import { SettingsButton } from './Settings';
 
 export function useNow(ms = 250) {
@@ -39,6 +39,10 @@ export function SettingsButtons() {
       <button type="button" className="icon-btn" aria-pressed={muted} aria-label={muted ? 'הפעלת סאונד' : 'השתקת סאונד'} title={muted ? 'הפעלת סאונד' : 'השתקה'}
         onClick={() => { g().setMuted(!muted); setMuted(!muted); }}>
         {muted ? <IconMute /> : <IconSound />}
+      </button>
+      <button type="button" className="icon-btn" aria-label="איפוס משחק" title="איפוס משחק (להתחיל מההתחלה)"
+        onClick={() => useUI.getState().setResetOpen(true)}>
+        <IconRestart />
       </button>
       <SettingsButton />
     </>

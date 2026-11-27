@@ -39,21 +39,27 @@ class SceneBoundary extends Component {
  * runs smoothly, and tells the player. Only when "automatic quality" is on.
  */
 function AutoQuality() {
-  const s = useRef({ t: 0, frames: 0, done: false });
+  // Watches the frame rate the whole time (not only at the start): every few seconds, if this
+  // computer can't keep up, the graphics go one level down – until the game runs smoothly.
+  const s = useRef({ t: 0, frames: 0, worst: 0, told: false });
   useFrame((_, dt) => {
     const st = s.current;
-    if (st.done || !useSettings.getState().autoQuality) return;
-    if (document.hidden) return;
+    if (!useSettings.getState().autoQuality || document.hidden) { st.t = 0; st.frames = 0; return; }
+    if (dt > 0.5) return; // a hitch (tab switch, shader compile) is not the frame rate
     st.t += dt;
-    if (st.t < 2.5) return; // let loading hitches settle
+    if (st.t < 1.5) return; // let the first loading hitches settle
     st.frames += 1;
-    if (st.t >= 7.5) {
-      st.done = true;
-      const fps = st.frames / (st.t - 2.5);
-      const q = useSettings.getState().quality;
-      if ((q === 'high' && fps < 40) || (q === 'medium' && fps < 28)) {
-        stepDownQuality();
-        logInfo('auto quality', `${Math.round(fps)} fps on "${q}" → "${useSettings.getState().quality}"`);
+    if (st.t < 5.5) return;
+    const fps = st.frames / (st.t - 1.5);
+    st.t = 0;
+    st.frames = 0;
+    const q = useSettings.getState().quality;
+    const floor = { ultra: 50, high: 44, medium: 34 }[q];
+    if (floor && fps < floor) {
+      stepDownQuality();
+      logInfo('auto quality', `${Math.round(fps)} fps on "${q}" → "${useSettings.getState().quality}"`);
+      if (!st.told) {
+        st.told = true;
         useUI.getState().toast('הגרפיקה הותאמה למחשב הזה כדי שהמשחק ירוץ חלק. אפשר לשנות בהגדרות.');
       }
     }

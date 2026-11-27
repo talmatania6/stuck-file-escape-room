@@ -60,13 +60,13 @@ const GradeShader = {
  * strength/radius/threshold tune the bloom; threshold is in linear HDR units,
  * so only emissive lights and screens (intensity > ~1) glow.
  */
-function PostFXPipeline({ strength = 0.45, radius = 0.25, threshold = 1.0, vignette = 0.14, ao = false }) {
+function PostFXPipeline({ strength = 0.45, radius = 0.25, threshold = 1.0, vignette = 0.14, ao = false, msaa = 4 }) {
   const { gl, scene, camera, size } = useThree();
 
   const { composer, bloom, grade, outline } = useMemo(() => {
     const target = new THREE.WebGLRenderTarget(1, 1, {
       type: THREE.HalfFloatType,
-      samples: gl.capabilities.isWebGL2 ? 4 : 0,
+      samples: gl.capabilities.isWebGL2 ? msaa : 0,
     });
     const composer = new EffectComposer(gl, target);
     composer.addPass(new RenderPass(scene, camera));
@@ -94,7 +94,7 @@ function PostFXPipeline({ strength = 0.45, radius = 0.25, threshold = 1.0, vigne
     composer.addPass(grade);
     return { composer, bloom, grade, outline };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gl, scene, camera, ao]);
+  }, [gl, scene, camera, ao, msaa]);
 
   useEffect(() => {
     bloom.strength = strength;
@@ -123,5 +123,5 @@ function PostFXPipeline({ strength = 0.45, radius = 0.25, threshold = 1.0, vigne
 /** Drop inside any <Canvas>. Off on the "low" graphics setting (the plain renderer takes over). */
 export function PostFX(props) {
   const q = useQuality();
-  return q.bloom ? <PostFXPipeline {...props} ao={q.ao && props.ao !== false} /> : null;
+  return q.bloom ? <PostFXPipeline {...props} ao={q.ao && props.ao !== false} msaa={q.msaa ?? 4} /> : null;
 }
