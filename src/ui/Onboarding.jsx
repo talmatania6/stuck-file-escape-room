@@ -112,7 +112,7 @@ export function Tutorial() {
   const content = [
     { icon: <IconMouse />, text: useSettings.getState().controlMode === 'mouse' ? 'לחצו על המסך והזיזו את העכבר כדי להסתובב. נסו להסתכל גם אחורה.' : 'גררו את המסך כדי להסתובב. נסו להסתכל גם אחורה.' },
     { icon: <IconHand />, text: 'יופי. עכשיו לחצו על חפץ שמקבל הילה, למשל המכשיר על שולחן העבודה.' },
-    { icon: <IconSearch />, text: 'ככה חוקרים. חלק מהחפצים נפתחים, שווה לבדוק ארונות ומגירות.' },
+    { icon: <IconSearch />, text: 'ככה תוכלו להסתובב בחדר. חלק מהחפצים נפתחים, שווה לבדוק ארונות ומגירות.' },
   ][Math.min(step, 2)];
   return (
     <div className={`coach ${step >= 2 ? 'done' : ''}`} role="status">

@@ -65,7 +65,7 @@ export function Interactable({ label, onActivate, standpoint, enabled = true, ch
     if (document.pointerLockElement) {
       // FPS mode: the player walks on their own – never pull the camera; just need to be close enough
       if (distance > REACH) {
-        setHovered(`${label} · קרבו כדי להפעיל`);
+        setHovered(`${label} · התקרבו כדי להפעיל`);
         return;
       }
     } else if (standpoint) setStandpoint(standpoint);
