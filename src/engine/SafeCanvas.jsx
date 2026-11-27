@@ -60,7 +60,7 @@ function AutoQuality() {
       logInfo('auto quality', `${Math.round(fps)} fps on "${q}" → "${useSettings.getState().quality}"`);
       if (!st.told) {
         st.told = true;
-        useUI.getState().toast('הגרפיקה הותאמה למחשב הזה כדי שהמשחק ירוץ חלק. אפשר לשנות בהגדרות.');
+        useUI.getState().toast('הגרפיקה הותאמה למחשב הזה כדי שהמשחק ירוץ חלק. תוכלו לשנות את ההגדרות בהתאם למה שנוח כם.');
       }
     }
   });

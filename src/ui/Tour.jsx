@@ -52,9 +52,9 @@ function Spotlight({ selector, title, text, step, total, onNext, onSkip, nextLab
 }
 
 const ROOM_TOUR = [
-  { selector: '.standpoints', title: 'מפת החדר', text: 'קפיצה מהירה לכל אזור חשוב בחדר, בלי לחפש. אפשר גם ללכת חופשי עם W A S D או החיצים. החפצים עצמם מקבלים הילה כשעוברים עליהם.' },
-  { selector: '.hud .timer', title: 'השעון', text: '30 דקות לכל המשימה. הוא ממשיך לרוץ גם באולם ובין החדרים.' },
-  { selector: '.file-progress', title: 'הקובץ של נועה', text: 'כל שכבה שתתקנו משחררת חלק מהקובץ. כאן רואים כמה כבר עשיתם.' },
+  { selector: '.standpoints', title: 'מפת החדר', text: 'מעבר מהיר לכל אזור חשוב בחדר. אפשר לנוע גם עם מקשי W A S D או החיצים. החפצים עצמם מקבלים הילה כשעוברים עליהם.' },
+  { selector: '.hud .timer', title: 'השעון', text: 'יש לכם 30 דקות לכל המשימה. השעון ממשיך לרוץ גם כשאתם נמצאים באולם ובין החדרים.' },
+  { selector: '.file-progress', title: 'הקובץ של נועה', text: 'כל שכבה שתתקנו משחררת חלק מהקובץ. כאן תראו כמה כבר התקדמתם.' },
   { selector: '.hud-btn.help', title: 'נתקעתם?', text: 'כאן אפשר לשאול שאלות (בחינם) או לבקש רמז מגליץ׳, שעולה 2 דקות.' },
 ];
 

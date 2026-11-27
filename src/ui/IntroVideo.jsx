@@ -411,7 +411,7 @@ export function IntroVideo() {
       {ended && (
         <div className="iv-end">
           <span className="iv-kicker">קבוצת {team}</span>
-          <h2>הכול מוכן. נועה סומכת עליכם.</h2>
+          <h2>הכול מוכן. נועה סומכת עליכם שתשלחו את הקובץ בזמן.</h2>
           <div className="iv-end-actions">
             <button type="button" className="btn big" onClick={go} autoFocus>יוצאים לדרך</button>
             <button type="button" className="btn ghost" onClick={replay}>לצפות שוב</button>

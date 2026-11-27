@@ -92,7 +92,7 @@ export function MatchBoard({ items, targets, solution, checkLabel = 'בדיקה'
     } else {
       sfx.buzz();
       const wrong = Object.values(res).filter((v) => !v).length;
-      setMsg({ kind: 'error', text: `${wrong === 1 ? 'אחד המקומות' : `${wrong} מקומות`} לא נכונים. אפשר להזיז ולבדוק שוב.` });
+      setMsg({ kind: 'error', text: `${wrong === 1 ? 'אחד המקומות' : `${wrong} מקומות`} לא נכונים. תוכלו להזיז ולבדוק שוב.` });
       onWrong?.();
     }
   };
@@ -101,7 +101,7 @@ export function MatchBoard({ items, targets, solution, checkLabel = 'בדיקה'
   return (
     <div className="match">
       <div className="match-tray" aria-label="פריטים לשיבוץ">
-        {free.length === 0 && <p className="muted small">כל הפריטים שובצו. אפשר לגרור פריט בחזרה כדי להחליף.</p>}
+        {free.length === 0 && <p className="muted small">כל הפריטים שובצו. עדיין אפשר להחליף בניהם אם התחרטתם.</p>}
         {free.map((it) => (
           <button
             key={it.id}

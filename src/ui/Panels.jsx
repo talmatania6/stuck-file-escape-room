@@ -46,7 +46,7 @@ export function HelpPanel({ roomN }) {
     const t = q.trim();
     if (!t) return;
     const reply = inHub
-      ? 'באולם צריך רק למצוא את הדלת המוארת וללחוץ עליה. הכפתור ״לדלת הפעילה״ למעלה יסובב אתכם אליה.'
+      ? 'באולם צריך למצוא את הדלת המוארת וללחוץ עליה. הכפתור ״לדלת הפעילה״ יכוון אתכם אליה.'
       : answer(room, t);
     setMsgs((m) => [...m, { from: 'p', text: t }, { from: 'c', text: reply }]);
     setText('');
@@ -58,7 +58,7 @@ export function HelpPanel({ roomN }) {
   return (
     <aside className="side-panel help-panel" aria-label="עזרה">
       <div className="sp-head">
-        <strong>נתקענו?</strong>
+        <strong>צריכים עזרה?</strong>
         <button type="button" className="icon-btn" onClick={() => setOpen(false)} aria-label="סגירה"><IconClose /></button>
       </div>
       <section className="help-chat">
@@ -67,7 +67,7 @@ export function HelpPanel({ roomN }) {
           {msgs.length === 0 && (
             <p className="msg from-c">
               {face && <img src={face} alt="" />}
-              <span>{inHub ? 'מה לא ברור?' : `אנחנו ב${room.place}. מה לא ברור?`}</span>
+              <span>{inHub ? 'מה לא ברור?' : `אנחנו ב${room.place}. במה אוכל לעזור לכם?`}</span>
             </p>
           )}
           {msgs.map((m, i) => (
